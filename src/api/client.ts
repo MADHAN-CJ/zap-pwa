@@ -14,7 +14,7 @@ type RequestOptions = {
 
 export type ApiResponse<T> =
   | { ok: true; data: T }
-  | { ok: false; error: string; status: number; description?: string };
+  | { ok: false; error: string; status: number; description?: string; code?: string };
 
 export async function apiRequest<T = unknown>(
   endpoint: string,
@@ -43,6 +43,7 @@ export async function apiRequest<T = unknown>(
         error: data?.message ?? data?.error ?? "Something went wrong",
         status: response.status,
         description: data?.description,
+        code: data?.code,
       };
     }
     return { ok: true, data: data as T };

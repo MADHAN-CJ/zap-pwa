@@ -37,7 +37,14 @@ export default function Portfolio() {
 
   const load = useCallback(async () => {
     const [f, h, p] = await Promise.all([getFunds(), getHoldings(), getPositions()]);
-    setNotConnected(!f.ok && /not connected/i.test(f.error));
+    // Broker not connected OR Dhan session expired → prompt reconnect. A 409 /
+    // BROKER_TOKEN_EXPIRED is NOT a Zap-session problem, so we must NOT log out.
+    setNotConnected(
+      !f.ok &&
+        (f.status === 409 ||
+          f.code === "BROKER_TOKEN_EXPIRED" ||
+          /not connected|reconnect|session expired/i.test(f.error))
+    );
     if (f.ok) setFunds(f.data.funds);
     if (h.ok) setHoldings(h.data.holdings);
     if (p.ok) setPositions(p.data.positions);
@@ -95,9 +102,9 @@ export default function Portfolio() {
       <div className="screen-header" />
       {notConnected && (
         <div className="card" style={{ borderColor: "var(--red)" }}>
-          <strong style={{ color: "var(--red)" }}>Broker not connected</strong>
+          <strong style={{ color: "var(--red)" }}>Reconnect Dhan</strong>
           <p className="dim" style={{ marginTop: 6, marginBottom: 0 }}>
-            Connect Dhan in the Broker tab to see your portfolio.
+            Your Dhan session has expired or isn't connected. Reconnect in the Broker tab to see your portfolio.
           </p>
         </div>
       )}
