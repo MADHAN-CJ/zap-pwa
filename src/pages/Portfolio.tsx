@@ -93,9 +93,20 @@ export default function Portfolio() {
       <div className="page">
         <PageHeader title="Portfolio" />
         <div className="screen">
-          <div className="center-fill">
-            <Spinner />
+          <div className="card">
+            <div className="skeleton" style={{ width: 90, height: 13, marginBottom: 14 }} />
+            <div className="skeleton" style={{ width: 180, height: 34, marginBottom: 18 }} />
+            <div className="skeleton" style={{ width: "100%", height: 15, marginBottom: 11 }} />
+            <div className="skeleton" style={{ width: "100%", height: 15, marginBottom: 11 }} />
+            <div className="skeleton" style={{ width: "65%", height: 15 }} />
           </div>
+          <div className="skeleton" style={{ width: 120, height: 22, margin: "22px 0 12px" }} />
+          {[0, 1].map((i) => (
+            <div key={i} className="line-item">
+              <div className="skeleton" style={{ width: 140, height: 18, marginBottom: 9 }} />
+              <div className="skeleton" style={{ width: 100, height: 13 }} />
+            </div>
+          ))}
         </div>
       </div>
     );

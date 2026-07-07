@@ -104,8 +104,12 @@ export default function Broker() {
       <div className="page">
         <PageHeader title="Broker" />
         <div className="screen">
-          <div className="center-fill">
-            <Spinner />
+          <div className="card">
+            <div className="skeleton" style={{ width: 100, height: 20, marginBottom: 18 }} />
+            <div className="skeleton" style={{ width: "100%", height: 15, marginBottom: 12 }} />
+            <div className="skeleton" style={{ width: "100%", height: 15, marginBottom: 12 }} />
+            <div className="skeleton" style={{ width: "80%", height: 15, marginBottom: 20 }} />
+            <div className="skeleton" style={{ width: "100%", height: 48, borderRadius: 12 }} />
           </div>
         </div>
       </div>

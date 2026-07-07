@@ -1,4 +1,5 @@
-import { NavLink, Outlet } from "react-router-dom";
+import { useLayoutEffect, useRef, useState } from "react";
+import { NavLink, Outlet, useLocation } from "react-router-dom";
 import { IconChecklist, IconChartPie, IconBuildingBank } from "@tabler/icons-react";
 import { haptics } from "@/lib/haptics";
 
@@ -10,7 +11,24 @@ const TABS = [
 ];
 
 export default function TabLayout() {
-  // Every page renders its own header band, so there's no shared app bar.
+  const { pathname } = useLocation();
+  const activeIndex = Math.max(0, TABS.findIndex((t) => t.to === pathname));
+  const innerRef = useRef<HTMLDivElement>(null);
+  const [pill, setPill] = useState({ x: 0, y: 0, w: 0, h: 0 });
+
+  // Measure the active tab so the highlight pill can travel to it smoothly.
+  useLayoutEffect(() => {
+    const inner = innerRef.current;
+    if (!inner) return;
+    const measure = () => {
+      const el = inner.querySelectorAll<HTMLElement>(".tab")[activeIndex];
+      if (el) setPill({ x: el.offsetLeft, y: el.offsetTop, w: el.offsetWidth, h: el.offsetHeight });
+    };
+    measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, [activeIndex]);
+
   return (
     <div className="app-shell">
       <main className="app-main">
@@ -18,7 +36,16 @@ export default function TabLayout() {
       </main>
 
       <nav className="tabbar">
-        <div className="tabbar-inner">
+        <div className="tabbar-inner" ref={innerRef}>
+          <span
+            className="tab-pill"
+            style={{
+              transform: `translateX(${pill.x}px)`,
+              width: pill.w,
+              top: pill.y,
+              height: pill.h,
+            }}
+          />
           {TABS.map(({ to, label, Icon }) => (
             <NavLink
               key={to}
