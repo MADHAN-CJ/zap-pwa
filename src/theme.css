@@ -53,8 +53,7 @@
   --r-md: 12px;
   --r-lg: 16px;
 
-  --tabbar-h: 92px; /* full tab-bar footprint incl. its gap — for FAB/toast offset */
-  --appbar-h: 54px;
+  --tabbar-h: 92px; /* full tab-bar footprint incl. its gap — for toast offset */
   --maxw: 520px;
 }
 
@@ -136,41 +135,6 @@ a {
   padding-bottom: 28px;
 }
 
-.screen-header {
-  padding-top: 0;
-}
-
-/* ---- App bar — frosted top brand bar (matches the tab bar) ---- */
-.appbar {
-  flex: 0 0 auto;
-  z-index: 2;
-  display: flex;
-  justify-content: center;
-  padding-top: env(safe-area-inset-top);
-  background: rgba(255, 255, 255, 0.72);
-  -webkit-backdrop-filter: saturate(180%) blur(22px);
-  backdrop-filter: saturate(180%) blur(22px);
-  border-bottom: 1px solid rgba(17, 24, 39, 0.06);
-}
-.appbar-inner {
-  width: 100%;
-  max-width: var(--maxw);
-  height: var(--appbar-h);
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  padding: 0 18px;
-}
-.appbar .logo {
-  color: var(--text);
-  display: block;
-}
-.appbar .wordmark {
-  font-size: 18px;
-  font-weight: 800;
-  letter-spacing: -0.02em;
-  color: var(--text);
-}
 
 /* ---- Tab bar — native iOS-style, frosted blur, floating ---- */
 .tabbar {
@@ -356,13 +320,6 @@ a {
   border-color: rgba(0, 0, 0, 0.25);
   border-top-color: var(--accent-text);
 }
-.center-fill {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 240px;
-}
 @keyframes spin {
   to {
     transform: rotate(360deg);
@@ -503,124 +460,6 @@ a {
   color: var(--red);
   text-align: center;
   margin-top: 16px;
-}
-
-/* ---- Confirm queue ---- */
-.swipe-outer {
-  position: relative;
-  margin: 12px 0;
-  border-radius: var(--r-md);
-  overflow: hidden;
-  touch-action: pan-y;
-}
-.swipe-actions {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  justify-content: space-between;
-  align-items: stretch;
-}
-.swipe-action {
-  display: flex;
-  align-items: center;
-  padding: 0 20px;
-  font-weight: 800;
-  font-size: 15px;
-}
-.swipe-action.confirm {
-  background: var(--green);
-  color: #06210f;
-}
-.swipe-action.delete {
-  background: var(--red);
-  color: #2a0d0d;
-}
-.swipe-card {
-  position: relative;
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: var(--r-md);
-  touch-action: pan-y;
-  user-select: none;
-}
-.order-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 14px;
-}
-.side-tag {
-  padding: 6px 10px;
-  border-radius: var(--r-sm);
-}
-.swipe-tapbtns {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  display: flex;
-  gap: 6px;
-}
-.tapbtn {
-  width: 30px;
-  height: 30px;
-  border-radius: 999px;
-  font-size: 15px;
-  font-weight: 800;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid var(--border);
-}
-.tapbtn.confirm {
-  color: var(--green);
-  border-color: var(--green);
-}
-.tapbtn.delete {
-  color: var(--red);
-  border-color: var(--red);
-}
-.tapbtn:disabled {
-  opacity: 0.4;
-}
-
-.side-toggle {
-  display: flex;
-  gap: 8px;
-}
-.side-btn {
-  flex: 1;
-  text-align: center;
-  padding: 10px;
-  border-radius: var(--r-sm);
-  background: var(--card);
-  color: var(--text-dim);
-  font-weight: 700;
-}
-
-.empty {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin-top: 70px;
-  padding: 0 40px;
-}
-
-.fab {
-  position: fixed;
-  right: max(20px, calc((100% - var(--maxw)) / 2 + 20px));
-  bottom: calc(var(--tabbar-h) + 16px);
-  width: 56px;
-  height: 56px;
-  border-radius: 28px;
-  background: var(--accent);
-  color: var(--accent-text);
-  font-size: 28px;
-  line-height: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
-  z-index: 15;
 }
 
 /* ---- Portfolio ---- */
