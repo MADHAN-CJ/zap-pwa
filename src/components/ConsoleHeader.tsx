@@ -9,10 +9,12 @@ export default function ConsoleHeader({
   buys,
   sells,
   onRefresh,
+  loading,
 }: {
   buys: number;
   sells: number;
   onRefresh?: () => void;
+  loading?: boolean;
 }) {
   const total = buys + sells;
   const buyPct = total ? (buys / total) * 100 : 0;
@@ -66,27 +68,36 @@ export default function ConsoleHeader({
         </button>
       </div>
 
-      <div className="console-main">
-        <div className="console-count">
-          <span className="n">{total}</span>
-          <span className="lbl">orders to approve</span>
+      {loading ? (
+        <div className="console-main">
+          <div className="skeleton on-dark" style={{ width: 150, height: 46 }} />
+          <div className="skeleton on-dark" style={{ width: 74, height: 42 }} />
         </div>
-        <div className="console-split">
-          <div className="r buy">
-            <span className="dot" />
-            <span className="num">{buys}</span>&nbsp;buys
+      ) : (
+        <>
+          <div className="console-main">
+            <div className="console-count">
+              <span className="n">{total}</span>
+              <span className="lbl">orders to approve</span>
+            </div>
+            <div className="console-split">
+              <div className="r buy">
+                <span className="dot" />
+                <span className="num">{buys}</span>&nbsp;buys
+              </div>
+              <div className="r sell">
+                <span className="dot" />
+                <span className="num">{sells}</span>&nbsp;sells
+              </div>
+            </div>
           </div>
-          <div className="r sell">
-            <span className="dot" />
-            <span className="num">{sells}</span>&nbsp;sells
-          </div>
-        </div>
-      </div>
 
-      <div className="console-bar">
-        <div className="seg buy" style={{ width: `${buyPct}%` }} />
-        <div className="seg sell" style={{ width: `${sellPct}%` }} />
-      </div>
+          <div className="console-bar">
+            <div className="seg buy" style={{ width: `${buyPct}%` }} />
+            <div className="seg sell" style={{ width: `${sellPct}%` }} />
+          </div>
+        </>
+      )}
     </header>
   );
 }

@@ -10,10 +10,11 @@ export interface Order {
   exch: string;
   side: Side;
   qty: number;
-  price: number;
-  ltp: number;
+  price: number | null;
   type: OrderType;
-  margin: number;
+  // Not always provided by the order API — shown only when present.
+  ltp?: number | null;
+  margin?: number | null;
 }
 
 const money = (n: number) =>
@@ -37,6 +38,12 @@ export default function OrderCard({
   const startX = useRef(0);
   const dxRef = useRef(0);
   const isBuy = order.side === "BUY";
+
+  // Figure = broker-provided margin when available, else the order's notional
+  // value (price × qty). Never fabricated.
+  const figure =
+    order.margin != null ? order.margin : order.price != null ? order.price * order.qty : null;
+  const figureLabel = order.margin != null && isBuy ? "Margin req." : "Order value";
 
   const commit = (kind: "approve" | "reject") => {
     if (leaving) return;
@@ -127,8 +134,10 @@ export default function OrderCard({
             </div>
           </div>
           <div className="oc-price">
-            <div className="p">{order.type === "MARKET" ? "MKT" : money(order.price)}</div>
-            <div className="ltp">LTP {money(order.ltp)}</div>
+            <div className="p">
+              {order.type === "MARKET" ? "MKT" : order.price != null ? money(order.price) : "—"}
+            </div>
+            {order.ltp != null ? <div className="ltp">LTP {money(order.ltp)}</div> : null}
           </div>
         </div>
 
@@ -140,10 +149,12 @@ export default function OrderCard({
           <span className="oc-qty">
             Qty <span className="num">{order.qty}</span>
           </span>
-          <div className="oc-figure">
-            <span className="k">{isBuy ? "Margin req." : "Order value"}</span>
-            <span className="v">{money(order.margin)}</span>
-          </div>
+          {figure != null ? (
+            <div className="oc-figure">
+              <span className="k">{figureLabel}</span>
+              <span className="v">{money(figure)}</span>
+            </div>
+          ) : null}
         </div>
 
         {/* actions */}

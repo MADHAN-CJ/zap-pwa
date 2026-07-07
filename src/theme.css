@@ -714,6 +714,10 @@ a {
   background: #e7eaef;
   border-radius: 9px;
 }
+.skeleton.on-dark {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 11px;
+}
 .skeleton::after {
   content: "";
   position: absolute;

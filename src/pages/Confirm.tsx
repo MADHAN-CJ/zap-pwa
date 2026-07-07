@@ -1,23 +1,44 @@
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { IconChecks } from "@tabler/icons-react";
 import ConsoleHeader from "@/components/ConsoleHeader";
 import OrderCard, { type Order } from "@/components/OrderCard";
 import { useUI } from "@/components/ui";
 import { haptics } from "@/lib/haptics";
+import type { Draft } from "@/api/orders";
+import { confirmAll, confirmOrder, deleteOrder, listPending } from "@/api/dashboard";
 
-// Realistic NSE seed orders (3 buys / 2 sells). Structured to match the Zap Trade
-// order list so live data can replace this later; only the display fields differ.
-const SEED: Order[] = [
-  { id: "1", sym: "RELIANCE", exch: "NSE", side: "BUY", qty: 5, price: 2940.5, ltp: 2952.1, type: "LIMIT", margin: 14702.5 },
-  { id: "2", sym: "INFY", exch: "NSE", side: "SELL", qty: 15, price: 1585.0, ltp: 1578.4, type: "LIMIT", margin: 23775.0 },
-  { id: "3", sym: "TCS", exch: "NSE", side: "BUY", qty: 3, price: 0, ltp: 3410.25, type: "MARKET", margin: 10230.75 },
-  { id: "4", sym: "HDFCBANK", exch: "NSE", side: "BUY", qty: 10, price: 1655.0, ltp: 1662.3, type: "LIMIT", margin: 16550.0 },
-  { id: "5", sym: "TATAMOTORS", exch: "NSE", side: "SELL", qty: 20, price: 965.75, ltp: 970.2, type: "LIMIT", margin: 19315.0 },
-];
+// Map a backend DRAFT order to the card's shape. ltp/margin aren't in the order
+// payload, so they're left undefined (the card computes order value from price).
+function toOrder(d: Draft): Order {
+  return {
+    id: d.id,
+    sym: d.symbol,
+    exch: d.exchangeSegment ? d.exchangeSegment.split("_")[0] : "NSE",
+    side: d.side,
+    qty: d.quantity,
+    price: d.price,
+    type: d.orderType?.toUpperCase() === "MARKET" ? "MARKET" : "LIMIT",
+  };
+}
 
 export default function Confirm() {
   const { toast } = useUI();
-  const [orders, setOrders] = useState<Order[]>(SEED);
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [version, setVersion] = useState(0); // bumped on (re)load so cards remount fresh
+
+  const load = useCallback(async () => {
+    const res = await listPending("DRAFT");
+    if (res.ok) setOrders(res.data.orders.map(toOrder));
+    else toast("error", "Couldn't load orders", res.description || res.error);
+    setVersion((v) => v + 1);
+    setLoading(false);
+  }, [toast]);
+
+  useEffect(() => {
+    setLoading(true);
+    load();
+  }, [load]);
 
   const { buys, sells } = useMemo(
     () => ({
@@ -29,31 +50,62 @@ export default function Confirm() {
 
   const remove = (id: string) => setOrders((os) => os.filter((o) => o.id !== id));
 
-  const approve = (o: Order) => {
-    toast("success", `Approved ${o.sym}`);
-    remove(o.id);
-  };
-  const reject = (o: Order) => {
-    toast("info", `Rejected ${o.sym}`);
-    remove(o.id);
-  };
-  const approveAll = () => {
-    const n = orders.length;
-    if (!n) return;
-    haptics.success();
-    setOrders([]);
-    toast("success", `Approved all ${n} orders`);
+  const approve = async (o: Order) => {
+    const res = await confirmOrder(o.id);
+    if (res.ok) {
+      toast("success", `Approved ${o.sym}`);
+      remove(o.id);
+    } else {
+      toast("error", "Could not approve", res.description || res.error);
+      load(); // rollback — refetch the real queue
+    }
   };
 
-  // Placeholder refresh — reloads the queue. Swap for a live re-fetch of the
-  // order list once it's wired to the backend.
-  const refresh = () => setOrders(SEED);
+  const reject = async (o: Order) => {
+    const res = await deleteOrder(o.id);
+    if (res.ok) {
+      toast("info", `Rejected ${o.sym}`);
+      remove(o.id);
+    } else {
+      toast("error", "Could not reject", res.description || res.error);
+      load();
+    }
+  };
+
+  const approveAll = async () => {
+    if (!orders.length) return;
+    haptics.success();
+    const res = await confirmAll();
+    if (res.ok) {
+      toast("success", "Done", `${res.data.confirmed} submitted, ${res.data.failed} failed.`);
+    } else {
+      toast("error", "Could not approve all", res.description || res.error);
+    }
+    load();
+  };
 
   return (
     <div className="orders">
-      <ConsoleHeader buys={buys} sells={sells} onRefresh={refresh} />
+      <ConsoleHeader buys={buys} sells={sells} onRefresh={load} loading={loading} />
 
-      {orders.length === 0 ? (
+      {loading ? (
+        <div className="feed">
+          {[0, 1, 2].map((i) => (
+            <div key={i} className="oc" style={{ marginBottom: 14 }}>
+              <div className="oc-head">
+                <div className="skeleton" style={{ width: 42, height: 42, borderRadius: 12 }} />
+                <div style={{ flex: 1 }}>
+                  <div className="skeleton" style={{ width: 120, height: 18, marginBottom: 7 }} />
+                  <div className="skeleton" style={{ width: 80, height: 12 }} />
+                </div>
+                <div className="skeleton" style={{ width: 90, height: 18 }} />
+              </div>
+              <hr className="oc-div" />
+              <div className="skeleton" style={{ width: "100%", height: 44, borderRadius: 13 }} />
+            </div>
+          ))}
+        </div>
+      ) : orders.length === 0 ? (
         <div className="oc-empty">
           <div className="ic">
             <IconChecks size={34} stroke={2} />
@@ -66,7 +118,7 @@ export default function Confirm() {
           <div className="feed-hint">Swipe right to approve · left to reject</div>
           {orders.map((o) => (
             <OrderCard
-              key={o.id}
+              key={`${o.id}:${version}`}
               order={o}
               onApprove={() => approve(o)}
               onReject={() => reject(o)}
