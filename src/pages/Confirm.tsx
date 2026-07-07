@@ -1,200 +1,82 @@
-import { useCallback, useEffect, useState } from "react";
-import { Draft, placeDraft } from "@/api/orders";
-import { confirmAll, confirmOrder, deleteOrder, listPending } from "@/api/dashboard";
-import { Spinner, useUI } from "@/components/ui";
-import SwipeRow from "@/components/SwipeRow";
-import { inr } from "@/lib/format";
+import { useMemo, useState } from "react";
+import { IconChecks } from "@tabler/icons-react";
+import ConsoleHeader from "@/components/ConsoleHeader";
+import OrderCard, { type Order } from "@/components/OrderCard";
+import { useUI } from "@/components/ui";
+import { haptics } from "@/lib/haptics";
+
+// Realistic NSE seed orders (3 buys / 2 sells). Structured to match the Zap Trade
+// order list so live data can replace this later; only the display fields differ.
+const SEED: Order[] = [
+  { id: "1", sym: "RELIANCE", exch: "NSE", side: "BUY", qty: 5, price: 2940.5, ltp: 2952.1, type: "LIMIT", margin: 14702.5 },
+  { id: "2", sym: "INFY", exch: "NSE", side: "SELL", qty: 15, price: 1585.0, ltp: 1578.4, type: "LIMIT", margin: 23775.0 },
+  { id: "3", sym: "TCS", exch: "NSE", side: "BUY", qty: 3, price: 0, ltp: 3410.25, type: "MARKET", margin: 10230.75 },
+  { id: "4", sym: "HDFCBANK", exch: "NSE", side: "BUY", qty: 10, price: 1655.0, ltp: 1662.3, type: "LIMIT", margin: 16550.0 },
+  { id: "5", sym: "TATAMOTORS", exch: "NSE", side: "SELL", qty: 20, price: 965.75, ltp: 970.2, type: "LIMIT", margin: 19315.0 },
+];
 
 export default function Confirm() {
-  const { toast, confirm } = useUI();
-  const [drafts, setDrafts] = useState<Draft[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [busyId, setBusyId] = useState<string | null>(null);
-  const [showForm, setShowForm] = useState(false);
+  const { toast } = useUI();
+  const [orders, setOrders] = useState<Order[]>(SEED);
 
-  // quick-draft form
-  const [symbol, setSymbol] = useState("");
-  const [qty, setQty] = useState("");
-  const [side, setSide] = useState<"BUY" | "SELL">("BUY");
+  const { buys, sells } = useMemo(
+    () => ({
+      buys: orders.filter((o) => o.side === "BUY").length,
+      sells: orders.filter((o) => o.side === "SELL").length,
+    }),
+    [orders]
+  );
 
-  const load = useCallback(async () => {
-    const res = await listPending("DRAFT");
-    if (res.ok) setDrafts(res.data.orders);
-    setLoading(false);
-  }, []);
+  const remove = (id: string) => setOrders((os) => os.filter((o) => o.id !== id));
 
-  useEffect(() => {
-    setLoading(true);
-    load();
-  }, [load]);
-
-  const onConfirm = async (id: string) => {
-    setBusyId(id);
-    const res = await confirmOrder(id);
-    setBusyId(null);
-    if (res.ok) toast("success", "Submitted", "Order sent to the market.");
-    else toast("error", "Could not confirm", res.description || res.error);
-    load();
+  const approve = (o: Order) => {
+    toast("success", `Approved ${o.sym}`);
+    remove(o.id);
+  };
+  const reject = (o: Order) => {
+    toast("info", `Rejected ${o.sym}`);
+    remove(o.id);
+  };
+  const approveAll = () => {
+    const n = orders.length;
+    if (!n) return;
+    haptics.success();
+    setOrders([]);
+    toast("success", `Approved all ${n} orders`);
   };
 
-  const onDelete = async (id: string) => {
-    setBusyId(id);
-    const res = await deleteOrder(id);
-    setBusyId(null);
-    if (res.ok) load();
-    else toast("error", "Could not delete", res.error);
-  };
-
-  const onConfirmAll = async () => {
-    if (drafts.length === 0) return;
-    const ok = await confirm({
-      title: "Confirm all",
-      message: `Submit all ${drafts.length} pending orders to the market?`,
-      confirmText: "Confirm all",
-      destructive: true,
-    });
-    if (!ok) return;
-    const res = await confirmAll();
-    if (res.ok)
-      toast("success", "Done", `${res.data.confirmed} submitted, ${res.data.failed} failed.`);
-    else toast("error", "Error", res.error);
-    load();
-  };
-
-  const submitDraft = async () => {
-    const q = parseInt(qty, 10);
-    if (!symbol || !q) return;
-    const res = await placeDraft({
-      side,
-      symbol: symbol.toUpperCase(),
-      quantity: q,
-      orderType: "MARKET",
-    });
-    if (res.ok) {
-      setSymbol("");
-      setQty("");
-      setShowForm(false);
-      load();
-    } else {
-      toast("error", "Could not draft", res.description || res.error);
-    }
-  };
+  // Placeholder refresh — reloads the queue. Swap for a live re-fetch of the
+  // order list once it's wired to the backend.
+  const refresh = () => setOrders(SEED);
 
   return (
-    <div className="screen">
-      <div className="screen-header row-between">
-        <h2 style={{ margin: 0, fontSize: 22, fontWeight: 800 }}>{drafts.length} pending</h2>
-        <button
-          className="pill"
-          style={{
-            background: "var(--accent)",
-            color: "var(--accent-text)",
-            opacity: drafts.length === 0 ? 0.4 : 1,
-          }}
-          onClick={onConfirmAll}
-        >
-          Confirm all
-        </button>
-      </div>
-      <p className="dim" style={{ marginTop: 4, marginBottom: 12 }}>
-        Swipe a card right to confirm, left to delete.
-      </p>
+    <div className="orders">
+      <ConsoleHeader buys={buys} sells={sells} onRefresh={refresh} />
 
-      {showForm && (
-        <div className="card" style={{ background: "var(--card-alt)", padding: 14 }}>
-          <div className="side-toggle">
-            {(["BUY", "SELL"] as const).map((s) => (
-              <button
-                key={s}
-                onClick={() => setSide(s)}
-                className="side-btn"
-                style={
-                  side === s
-                    ? { background: s === "BUY" ? "var(--green)" : "var(--red)", color: "#06210f" }
-                    : undefined
-                }
-              >
-                {s}
-              </button>
-            ))}
+      {orders.length === 0 ? (
+        <div className="oc-empty">
+          <div className="ic">
+            <IconChecks size={34} stroke={2} />
           </div>
-          <input
-            className="input"
-            placeholder="Symbol (e.g. TCS)"
-            style={{ textTransform: "uppercase" }}
-            value={symbol}
-            onChange={(e) => setSymbol(e.target.value)}
-          />
-          <input
-            className="input"
-            placeholder="Qty"
-            inputMode="numeric"
-            value={qty}
-            onChange={(e) => setQty(e.target.value.replace(/\D/g, ""))}
-          />
-          <button
-            className="btn"
-            style={{ background: "var(--blue)", color: "#04223f", marginTop: 12 }}
-            onClick={submitDraft}
-          >
-            Add draft (MARKET)
+          <h3>All caught up</h3>
+          <p>No orders waiting for approval.</p>
+        </div>
+      ) : (
+        <div className="feed">
+          <div className="feed-hint">Swipe right to approve · left to reject</div>
+          {orders.map((o) => (
+            <OrderCard
+              key={o.id}
+              order={o}
+              onApprove={() => approve(o)}
+              onReject={() => reject(o)}
+            />
+          ))}
+          <button className="approve-all-btn" onClick={approveAll}>
+            Approve all · <span className="num">{orders.length}</span>
           </button>
         </div>
       )}
-
-      {loading ? (
-        <div className="center-fill">
-          <Spinner />
-        </div>
-      ) : drafts.length === 0 ? (
-        <div className="empty">
-          <div style={{ fontSize: 44, color: "var(--text-dim)" }}>✓</div>
-          <p style={{ marginTop: 12, fontSize: 16 }}>No pending orders.</p>
-          <p className="dim" style={{ textAlign: "center" }}>
-            Orders your AI drafts will appear here for confirmation.
-          </p>
-        </div>
-      ) : (
-        <div>
-          {drafts.map((d) => {
-            const isBuy = d.side === "BUY";
-            return (
-              <SwipeRow
-                key={d.id}
-                disabled={busyId === d.id}
-                onConfirm={() => onConfirm(d.id)}
-                onDelete={() => onDelete(d.id)}
-              >
-                <div className="order-row">
-                  <div
-                    className="side-tag"
-                    style={{ background: isBuy ? "#0e2a1a" : "#2a1414" }}
-                  >
-                    <span style={{ color: isBuy ? "var(--green)" : "var(--red)", fontWeight: 700 }}>
-                      {d.side}
-                    </span>
-                  </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 16, fontWeight: 700 }}>
-                      {d.symbol} · {d.quantity}
-                    </div>
-                    <div className="dim" style={{ marginTop: 3 }}>
-                      {d.orderType}
-                      {d.price ? ` @ ${inr(d.price)}` : ""} · {d.productType} ·{" "}
-                      {d.source === "ai" ? "drafted by AI" : "manual"}
-                    </div>
-                  </div>
-                  {busyId === d.id ? <Spinner /> : null}
-                </div>
-              </SwipeRow>
-            );
-          })}
-        </div>
-      )}
-
-      <button className="fab" onClick={() => setShowForm((v) => !v)} aria-label="New draft">
-        {showForm ? "✕" : "+"}
-      </button>
     </div>
   );
 }

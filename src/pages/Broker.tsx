@@ -10,6 +10,7 @@ import {
 } from "@/api/broker";
 import { clearAuth, getUser } from "@/store/auth";
 import { Spinner, useUI } from "@/components/ui";
+import PageHeader from "@/components/PageHeader";
 
 type Mode = "access_token" | "api_key";
 
@@ -100,9 +101,12 @@ export default function Broker() {
 
   if (loading) {
     return (
-      <div className="screen">
-        <div className="center-fill">
-          <Spinner />
+      <div className="page">
+        <PageHeader title="Broker" />
+        <div className="screen">
+          <div className="center-fill">
+            <Spinner />
+          </div>
         </div>
       </div>
     );
@@ -112,16 +116,17 @@ export default function Broker() {
   const user = getUser();
 
   return (
-    <div className="screen">
-      <div className="screen-header" />
+    <div className="page">
+      <PageHeader title="Broker" />
+      <div className="screen">
       <div className="card">
         <div className="row-between" style={{ marginBottom: 6 }}>
           <p className="card-title">Dhan</p>
           <span
             className="pill"
             style={{
-              background: connected ? "#0e2a1a" : "#2a1414",
-              color: connected ? "var(--green)" : "var(--red)",
+              background: connected ? "var(--buy-bg)" : "var(--sell-bg)",
+              color: connected ? "var(--buy)" : "var(--sell)",
             }}
           >
             {connected ? "CONNECTED" : (status?.status || "NOT CONNECTED").toUpperCase()}
@@ -249,6 +254,7 @@ export default function Broker() {
       <button className="btn secondary" onClick={signOut}>
         Sign out
       </button>
+      </div>
     </div>
   );
 }

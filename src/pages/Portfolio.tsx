@@ -9,6 +9,7 @@ import {
 } from "@/api/broker";
 import { closePosition } from "@/api/dashboard";
 import { Spinner, useUI } from "@/components/ui";
+import PageHeader from "@/components/PageHeader";
 import { inr } from "@/lib/format";
 
 function Badge({ product, label }: { product?: string; label?: string }) {
@@ -89,17 +90,21 @@ export default function Portfolio() {
 
   if (loading) {
     return (
-      <div className="screen">
-        <div className="center-fill">
-          <Spinner />
+      <div className="page">
+        <PageHeader title="Portfolio" />
+        <div className="screen">
+          <div className="center-fill">
+            <Spinner />
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="screen">
-      <div className="screen-header" />
+    <div className="page">
+      <PageHeader title="Portfolio" />
+      <div className="screen">
       {notConnected && (
         <div className="card" style={{ borderColor: "var(--red)" }}>
           <strong style={{ color: "var(--red)" }}>Reconnect Dhan</strong>
@@ -187,6 +192,7 @@ export default function Portfolio() {
           );
         })
       )}
+      </div>
     </div>
   );
 }

@@ -1,22 +1,49 @@
 :root {
   /* Zap Trade palette — dark with a yellow accent (matches the OAuth pages). */
-  --bg: #0b0f17;
-  --card: #111827;
-  --card-alt: #0f1623;
-  --border: #1f2937;
-  --text: #e5e7eb;
-  --text-dim: #9ca3af;
-  --accent: #facc15;
-  --accent-text: #111827;
-  --green: #22c55e;
-  --red: #f87171;
-  --blue: #60a5fa;
+  --bg: #F5F6F8;
+
+  /* ---- Redesign tokens (Orders console + order cards) ---- */
+  --canvas: #F5F6F8;
+  --surface: #ffffff;
+  --ink: #0c1322;
+  --ink2: #3a4356; /* secondary text */
+  --muted: #79828f;
+  --faint: #aeb5c0;
+  --hairline: #eceef2;
+  --line: #e2e5eb;
+  --voltage: #c4f13a; /* brand only, sparingly */
+  --buy: #12a150;
+  --buy-bg: #e7f6ee;
+  --sell: #e5484d;
+  --sell-bg: #fcecec;
+  --buy-lit: #2bd07f; /* brighter buy for the dark console */
+  --sell-lit: #ff5a5f;
+  --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Monaco, "Cascadia Mono",
+    "Roboto Mono", monospace;
+  --r-card: 20px;
+  --r-tile: 12px;
+  --r-pill: 5px;
+
+  /* legacy tokens, now pointed at the light theme */
+  --card: #ffffff;
+  --card-alt: #eef1f5;
+  --border: #e2e5eb;
+  --text: #0c1322;
+  --text-dim: #79828f;
+  --accent: #17be5f;
+  --accent-deep: #0da049;
+  --accent-text: #ffffff;
+  --accent-soft: rgba(23, 190, 95, 0.14);
+  --green: #12a150;
+  --red: #e5484d;
+  --blue: #007aff;
 
   --r-sm: 8px;
   --r-md: 12px;
   --r-lg: 16px;
 
-  --tabbar-h: 60px;
+  --tabbar-h: 92px; /* full tab-bar footprint incl. its gap — for FAB/toast offset */
+  --appbar-h: 54px;
   --maxw: 520px;
 }
 
@@ -56,44 +83,115 @@ a {
   color: var(--accent);
 }
 
-/* ---- App shell: centered, phone-width column ---- */
+/* ---- App shell: full-viewport flex column (robust in installed PWAs) ----
+   Header and tab bar are normal flex items (top/bottom); only .app-main
+   scrolls. This avoids position:fixed + safe-area quirks that leave a big
+   gap under the tab bar in standalone PWAs. */
 .app-shell {
   max-width: var(--maxw);
   margin: 0 auto;
-  min-height: 100%;
+  height: 100vh; /* fallback */
+  height: 100dvh; /* browser tab: tracks the address bar */
+  height: var(--app-height, 100dvh); /* JS refines on rotation/toolbar changes */
   display: flex;
   flex-direction: column;
   position: relative;
+  overflow: hidden;
+  background: var(--bg);
+}
+
+/* Installed PWA (standalone): use the *large* viewport height. It's the static
+   full-screen height, so it's correct on first paint — unlike 100dvh, which iOS
+   under-reports until the first scroll. Scoped to standalone so a browser tab
+   still uses 100dvh (above) to track its address bar. */
+@media all and (display-mode: standalone) {
+  .app-shell {
+    height: 100lvh;
+    height: var(--app-height, 100lvh);
+  }
+}
+
+.app-main {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  position: relative;
+  /* clearance so the last content can scroll above the floating tab bar */
+  padding-bottom: calc(var(--tabbar-h) + 8px);
 }
 
 .screen {
-  flex: 1;
   padding: 16px;
-  padding-bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom) + 24px);
+  padding-bottom: 28px;
 }
 
 .screen-header {
-  padding-top: calc(env(safe-area-inset-top) + 8px);
+  padding-top: 0;
 }
 
-/* ---- Tab bar ---- */
+/* ---- App bar — frosted top brand bar (matches the tab bar) ---- */
+.appbar {
+  flex: 0 0 auto;
+  z-index: 2;
+  display: flex;
+  justify-content: center;
+  padding-top: env(safe-area-inset-top);
+  background: rgba(255, 255, 255, 0.72);
+  -webkit-backdrop-filter: saturate(180%) blur(22px);
+  backdrop-filter: saturate(180%) blur(22px);
+  border-bottom: 1px solid rgba(17, 24, 39, 0.06);
+}
+.appbar-inner {
+  width: 100%;
+  max-width: var(--maxw);
+  height: var(--appbar-h);
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 0 18px;
+}
+.appbar .logo {
+  color: var(--text);
+  display: block;
+}
+.appbar .wordmark {
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--text);
+}
+
+/* ---- Tab bar — native iOS-style, frosted blur, floating ---- */
 .tabbar {
-  position: fixed;
-  bottom: 0;
+  position: absolute;
   left: 0;
   right: 0;
-  height: calc(var(--tabbar-h) + env(safe-area-inset-bottom));
-  padding-bottom: env(safe-area-inset-bottom);
-  background: var(--card);
-  border-top: 1px solid var(--border);
+  bottom: 0;
+  z-index: 10;
   display: flex;
-  z-index: 20;
+  justify-content: center;
+  /* Floats over the feed so content frosts through the blur (native-style).
+     Bottom gap capped with min() so a large/odd safe-area inset (installed PWAs)
+     can't balloon it. */
+  padding: 0 12px max(14px, min(env(safe-area-inset-bottom), 18px));
+  pointer-events: none; /* only the pill is interactive; taps pass to content */
 }
 .tabbar-inner {
-  max-width: var(--maxw);
-  margin: 0 auto;
+  pointer-events: auto;
   width: 100%;
+  max-width: var(--maxw);
   display: flex;
+  gap: 4px;
+  padding: 7px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.68);
+  -webkit-backdrop-filter: saturate(180%) blur(22px);
+  backdrop-filter: saturate(180%) blur(22px);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  /* Kept short vertically so it fits inside the ~16-18px bottom gap and is
+     never clipped by the screen edge / home-indicator area. */
+  box-shadow: 0 4px 14px rgba(17, 24, 39, 0.13), 0 1px 4px rgba(17, 24, 39, 0.07),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
 .tab {
   flex: 1;
@@ -101,27 +199,33 @@ a {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 2px;
-  color: var(--text-dim);
-  font-size: 11px;
+  gap: 3px;
+  padding: 7px 0 6px;
+  border-radius: 999px;
+  color: #8b9099;
+  font-size: 10.5px;
   font-weight: 600;
+  letter-spacing: 0.01em;
   text-decoration: none;
+  transition: color 0.2s ease, background 0.2s ease;
 }
 .tab.active {
   color: var(--accent);
+  background: var(--accent-soft);
 }
-.tab .glyph {
-  font-size: 22px;
-  line-height: 24px;
+.tab svg {
+  width: 26px;
+  height: 26px;
 }
 
 /* ---- Cards & generic bits ---- */
 .card {
   background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: var(--r-lg);
+  border: 1px solid var(--hairline);
+  border-radius: 18px;
   padding: 16px;
-  margin-bottom: 16px;
+  margin-bottom: 14px;
+  box-shadow: 0 1px 2px rgba(12, 19, 34, 0.04), 0 8px 22px -14px rgba(12, 19, 34, 0.12);
 }
 .card-title {
   color: var(--text-dim);
@@ -163,13 +267,13 @@ a {
   cursor: default;
 }
 .btn.secondary {
-  background: var(--card);
+  background: #f2f4f7;
   border: 1px solid var(--border);
-  color: var(--text-dim);
+  color: var(--ink2);
 }
 .btn.danger {
   background: var(--red);
-  color: #2a0d0d;
+  color: #fff;
 }
 .btn.ghost-danger {
   background: transparent;
@@ -219,7 +323,7 @@ a {
 .spinner {
   width: 20px;
   height: 20px;
-  border: 2px solid rgba(255, 255, 255, 0.25);
+  border: 2px solid rgba(12, 19, 34, 0.12);
   border-top-color: var(--accent);
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
@@ -246,7 +350,7 @@ a {
   position: fixed;
   left: 0;
   right: 0;
-  bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom) + 16px);
+  bottom: calc(var(--tabbar-h) + 16px);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -258,31 +362,44 @@ a {
 .toast {
   max-width: var(--maxw);
   width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 11px;
   background: var(--card);
-  border: 1px solid var(--border);
-  border-left-width: 4px;
-  border-radius: var(--r-md);
-  padding: 12px 14px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
-  animation: toast-in 0.18s ease-out;
+  border: 1px solid var(--hairline);
+  border-radius: 16px;
+  padding: 11px 15px;
+  box-shadow: 0 12px 32px -10px rgba(12, 19, 34, 0.24), 0 1px 2px rgba(12, 19, 34, 0.06);
+  animation: toast-in 0.2s cubic-bezier(0.32, 1.4, 0.5, 1);
 }
-.toast.success {
-  border-left-color: var(--green);
+.toast-ic {
+  flex: 0 0 auto;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
 }
-.toast.error {
-  border-left-color: var(--red);
+.toast.success .toast-ic {
+  background: var(--buy);
 }
-.toast.info {
-  border-left-color: var(--blue);
+.toast.error .toast-ic {
+  background: var(--sell);
+}
+.toast.info .toast-ic {
+  background: var(--ink2);
 }
 .toast-title {
   font-weight: 700;
   font-size: 14px;
+  color: var(--ink);
 }
 .toast-msg {
-  color: var(--text-dim);
+  color: var(--muted);
   font-size: 13px;
-  margin-top: 2px;
+  margin-top: 1px;
 }
 @keyframes toast-in {
   from {
@@ -304,11 +421,12 @@ a {
 }
 .modal {
   background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: var(--r-lg);
+  border: 1px solid var(--hairline);
+  border-radius: 20px;
   padding: 20px;
   width: 100%;
   max-width: 360px;
+  box-shadow: 0 24px 60px -14px rgba(12, 19, 34, 0.4);
 }
 .modal h3 {
   margin: 0 0 8px;
@@ -466,7 +584,7 @@ a {
 .fab {
   position: fixed;
   right: max(20px, calc((100% - var(--maxw)) / 2 + 20px));
-  bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom) + 20px);
+  bottom: calc(var(--tabbar-h) + 16px);
   width: 56px;
   height: 56px;
   border-radius: 28px;
@@ -484,10 +602,11 @@ a {
 /* ---- Portfolio ---- */
 .line-item {
   background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: var(--r-md);
+  border: 1px solid var(--hairline);
+  border-radius: 16px;
   padding: 14px;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
+  box-shadow: 0 1px 2px rgba(12, 19, 34, 0.04);
 }
 .sym-row {
   display: flex;
@@ -510,4 +629,502 @@ a {
   color: var(--text-dim);
   font-weight: 700;
   font-size: 13px;
+}
+
+/* ============================================================
+   ORDERS REDESIGN — console header + swipe-to-approve cards
+   ============================================================ */
+.num {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+/* Pages own their layout + header (no generic app bar). */
+.orders,
+.page {
+  min-height: 100%;
+  background: var(--canvas);
+}
+
+/* Dark-green header band for non-Orders pages (matches the console look). */
+.pageheader {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  /* side/top padding must match .console exactly so the brand mark doesn't shift
+     when switching between Orders and other pages */
+  padding: calc(env(safe-area-inset-top) + 15px) 18px 16px;
+  color: #fff;
+  background: linear-gradient(
+    115deg,
+    rgba(0, 34, 12, 0.9) 0%,
+    rgba(0, 25, 8, 0.9) 60%,
+    rgba(0, 20, 7, 0.9) 100%
+  );
+  -webkit-backdrop-filter: saturate(160%) blur(20px);
+  backdrop-filter: saturate(160%) blur(20px);
+}
+.ph-brand {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: #fff;
+}
+.ph-brand .wm {
+  font-weight: 800;
+  font-size: 16px;
+  letter-spacing: -0.01em;
+}
+.ph-title {
+  margin: 16px 0 0;
+  font-size: 30px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+/* ---- Live console header band ---- */
+.console {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  padding: calc(env(safe-area-inset-top) + 15px) 18px 15px;
+  background: linear-gradient(
+    115deg,
+    rgba(0, 34, 12, 0.9) 0%,
+    rgba(0, 25, 8, 0.9) 60%,
+    rgba(0, 20, 7, 0.9) 100%
+  );
+  -webkit-backdrop-filter: saturate(160%) blur(20px);
+  backdrop-filter: saturate(160%) blur(20px);
+  color: #fff;
+  overflow: hidden;
+  transition: padding 0.26s ease;
+}
+.console-top {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.console-brand {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: #fff;
+}
+.console-brand .wm {
+  font-weight: 800;
+  font-size: 16px;
+  letter-spacing: -0.01em;
+}
+.console-refresh {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 11px;
+  font-weight: 500;
+  background: none;
+  border: 0;
+  padding: 5px 3px;
+  margin: -5px -3px; /* keep visual position, enlarge tap target */
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.console-refresh:active {
+  opacity: 0.55;
+}
+.console-refresh .num {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.62);
+}
+.console-refresh.spinning svg {
+  animation: refresh-spin 0.65s ease;
+}
+@keyframes refresh-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.console-main {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 16px;
+  transition: margin 0.26s ease;
+}
+.console-count {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+.console-count .n {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 46px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  transition: font-size 0.26s ease;
+}
+.console-count .lbl {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.2;
+  max-width: 84px;
+}
+.console-split {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  align-items: flex-start;
+}
+.console-split .r {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.82);
+}
+.console-split .dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+}
+.console-split .r.buy .dot {
+  background: var(--buy-lit);
+}
+.console-split .r.sell .dot {
+  background: var(--sell-lit);
+}
+.console-bar {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  gap: 3px;
+  height: 6px;
+  margin-top: 16px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.07);
+  overflow: hidden;
+  transition: height 0.26s ease, margin 0.26s ease, opacity 0.2s ease;
+}
+.console-bar .seg {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.35s cubic-bezier(0.2, 0.8, 0.3, 1);
+}
+.console-bar .seg.buy {
+  background: var(--buy-lit);
+}
+.console-bar .seg.sell {
+  background: var(--sell-lit);
+}
+
+/* Compressed state — applied when the feed is scrolled. */
+.console.compact {
+  padding-top: calc(env(safe-area-inset-top) + 9px);
+  padding-bottom: 10px;
+}
+.console.compact .console-main {
+  margin-top: 11px;
+}
+.console.compact .console-count .n {
+  font-size: 27px;
+}
+.console.compact .console-split {
+  flex-direction: row;
+  align-items: center;
+  gap: 14px;
+}
+.console.compact .console-bar {
+  height: 0;
+  margin-top: 0;
+  opacity: 0;
+}
+
+/* ---- Order feed + cards ---- */
+.feed {
+  padding: 16px 16px 28px;
+  display: flex;
+  flex-direction: column;
+}
+.oc-wrap {
+  position: relative;
+  margin-bottom: 14px;
+  border-radius: var(--r-card);
+  max-height: 460px;
+  transition: max-height 0.34s ease, opacity 0.28s ease, margin 0.34s ease;
+}
+.oc-wrap.leaving {
+  max-height: 0;
+  opacity: 0;
+  margin-bottom: 0;
+  pointer-events: none;
+}
+.oc-reveal {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--r-card);
+  display: flex;
+  align-items: center;
+  opacity: 0;
+  transition: opacity 0.12s ease;
+}
+.oc-reveal.approve {
+  background: linear-gradient(90deg, var(--buy), #16b45f);
+  justify-content: flex-start;
+  padding-left: 26px;
+}
+.oc-reveal.reject {
+  background: linear-gradient(270deg, var(--sell), #d43a3f);
+  justify-content: flex-end;
+  padding-right: 26px;
+}
+.oc-reveal .lbl {
+  color: #fff;
+  font-weight: 800;
+  font-size: 13px;
+  letter-spacing: 0.18em;
+}
+
+/* swipe hint + bulk action */
+.feed-hint {
+  text-align: center;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--muted);
+  padding: 2px 8px 12px;
+}
+.approve-all-btn {
+  width: 100%;
+  margin-top: 4px;
+  padding: 15px;
+  border: 0;
+  border-radius: 16px;
+  background: var(--buy);
+  color: #fff;
+  font-weight: 800;
+  font-size: 15px;
+  box-shadow: 0 8px 20px -10px rgba(18, 161, 80, 0.7);
+  transition: transform 0.08s ease;
+}
+.approve-all-btn:active {
+  transform: scale(0.98);
+}
+.oc {
+  position: relative;
+  z-index: 2;
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-card);
+  padding: 16px;
+  box-shadow: 0 1px 2px rgba(12, 19, 34, 0.04), 0 8px 22px -10px rgba(12, 19, 34, 0.12);
+  touch-action: pan-y;
+  user-select: none;
+}
+.oc-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+.oc-id {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  flex: 1 1 auto;
+  min-width: 0; /* allow the left side to shrink/ellipsis */
+}
+.oc-sym {
+  min-width: 0;
+}
+.oc-sym .t {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--ink);
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.oc-sym .sub {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 3px;
+  letter-spacing: 0.01em;
+}
+.oc-price {
+  flex: 0 0 auto; /* protected: never shrinks */
+  text-align: right;
+  white-space: nowrap;
+  padding-left: 8px; /* guaranteed gap so sides never collide */
+}
+.oc-price .p {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--ink);
+}
+.oc-price .ltp {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 3px;
+}
+.oc-div {
+  border: 0;
+  border-top: 1px dashed var(--line);
+  margin: 14px 0;
+}
+.oc-txn {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+.side-pill {
+  padding: 4px 9px;
+  border-radius: var(--r-pill);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+.side-pill.buy {
+  background: var(--buy-bg);
+  color: var(--buy);
+}
+.side-pill.sell {
+  background: var(--sell-bg);
+  color: var(--sell);
+}
+.oc-qty {
+  font-size: 13px;
+  color: var(--ink2);
+  font-weight: 500;
+}
+.oc-figure {
+  margin-left: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+.oc-figure .k {
+  font-size: 11px;
+  color: var(--muted);
+  font-weight: 500;
+}
+.oc-figure .v {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink);
+  margin-top: 2px;
+}
+.oc-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+}
+.btn-reject {
+  flex: 0 0 auto;
+  padding: 12px 22px;
+  border-radius: 13px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink2);
+  font-weight: 700;
+  font-size: 14px;
+  transition: transform 0.08s ease, background 0.15s ease;
+}
+.btn-reject:active {
+  transform: scale(0.97);
+  background: #f7f8fa;
+}
+.btn-approve {
+  flex: 1 1 auto;
+  padding: 12px;
+  border-radius: 13px;
+  border: 0;
+  background: var(--buy);
+  color: #fff;
+  font-weight: 800;
+  font-size: 14px;
+  box-shadow: 0 6px 16px -8px rgba(18, 161, 80, 0.7);
+  transition: transform 0.08s ease;
+}
+.btn-approve:active {
+  transform: scale(0.98);
+}
+
+/* ---- Logo tile (monogram placeholder → real <img> drops in) ---- */
+.logo-tile {
+  width: 42px;
+  height: 42px;
+  flex: 0 0 auto;
+  border-radius: var(--r-tile);
+  background: #eef1f5;
+  border: 1px solid var(--hairline);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  position: relative;
+}
+.logo-tile .mono {
+  font-family: var(--mono);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--ink2);
+}
+.logo-tile img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  background: var(--surface);
+}
+
+/* ---- Empty state ---- */
+.oc-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 88px 40px;
+  gap: 8px;
+  color: var(--muted);
+}
+.oc-empty .ic {
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  background: var(--buy-bg);
+  color: var(--buy);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 6px;
+}
+.oc-empty h3 {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 700;
+  color: var(--ink);
+}
+.oc-empty p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
 }
