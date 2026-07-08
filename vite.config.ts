@@ -34,15 +34,11 @@ export default defineConfig(({ mode }) => {
           orientation: "portrait",
           scope: base,
           start_url: base,
+          // The app icon is a finished tile with transparent rounded corners, so
+          // it's an "any"-purpose icon — not maskable (that needs full-bleed art).
           icons: [
             { src: "pwa-192.png", sizes: "192x192", type: "image/png" },
             { src: "pwa-512.png", sizes: "512x512", type: "image/png" },
-            {
-              src: "pwa-512.png",
-              sizes: "512x512",
-              type: "image/png",
-              purpose: "maskable",
-            },
           ],
         },
         workbox: {
