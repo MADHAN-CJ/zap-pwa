@@ -697,6 +697,7 @@ a {
   backdrop-filter: saturate(160%) blur(20px);
 }
 .ph-top {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -711,7 +712,13 @@ a {
   font-size: 16px;
   letter-spacing: -0.01em;
 }
+/* Absolutely positioned so the (taller) button never inflates the brand row —
+   keeps the logo at the exact same height as the action-less headers. */
 .ph-action {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -724,7 +731,7 @@ a {
   transition: transform 0.08s ease, background 0.15s ease;
 }
 .ph-action:active {
-  transform: scale(0.94);
+  transform: translateY(-50%) scale(0.94);
   background: rgba(255, 255, 255, 0.16);
 }
 .ph-title {
