@@ -9,6 +9,7 @@ import { confirmAll, confirmOrder, deleteOrder, listPending } from "@/api/dashbo
 
 // Map a backend DRAFT order to the card's shape. ltp/margin aren't in the order
 // payload, so they're left undefined (the card computes order value from price).
+// validity/trigger/createdAt render only when present — the card is dynamic.
 function toOrder(d: Draft): Order {
   return {
     id: d.id,
@@ -18,6 +19,10 @@ function toOrder(d: Draft): Order {
     qty: d.quantity,
     price: d.price,
     type: d.orderType?.toUpperCase() === "MARKET" ? "MARKET" : "LIMIT",
+    product: d.productType,
+    validity: d.validity,
+    trigger: d.triggerPrice,
+    createdAt: d.createdAt,
   };
 }
 

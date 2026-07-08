@@ -1,30 +1,23 @@
-import { useCallback, useEffect, useState } from "react";
-import {
-  Funds,
-  Holding,
-  Position,
-  getFunds,
-  getHoldings,
-  getPositions,
-} from "@/api/broker";
+import { useCallback, useEffect, useState, type CSSProperties } from "react";
+import { IconCash, IconChartPie, IconShieldHalf, IconRefresh } from "@tabler/icons-react";
+import { Funds, Holding, Position, getFunds, getHoldings, getPositions } from "@/api/broker";
 import { closePosition } from "@/api/dashboard";
 import { Spinner, useUI } from "@/components/ui";
 import PageHeader from "@/components/PageHeader";
-import { inr } from "@/lib/format";
+import LogoTile from "@/components/LogoTile";
+import { companyName } from "@/lib/logos";
+import { useDeviceTilt } from "@/lib/useDeviceTilt";
 
-function Badge({ product, label }: { product?: string; label?: string }) {
-  const p = String(product ?? "").toUpperCase();
-  const intraday = p === "INTRADAY" || p === "MIS";
-  return <span className={intraday ? "badge intraday" : "badge"}>{label ?? p ?? "—"}</span>;
-}
+const money0 = (n: number) => "₹" + Math.round(n).toLocaleString("en-IN");
+const money2 = (n: number) =>
+  "₹" + n.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const pnl = (n: number) => (n >= 0 ? "+" : "−") + "₹" + Math.round(Math.abs(n)).toLocaleString("en-IN");
 
-function Row({ k, v }: { k: string; v: string }) {
-  return (
-    <div className="row-between" style={{ padding: "6px 0" }}>
-      <span className="dim">{k}</span>
-      <span style={{ fontWeight: 600 }}>{v}</span>
-    </div>
-  );
+function prettyProduct(p: string) {
+  const u = (p || "").toUpperCase();
+  if (u === "INTRADAY" || u === "MIS") return "Intraday";
+  if (u === "CNC" || u === "DELIVERY") return "Delivery";
+  return p || "—";
 }
 
 export default function Portfolio() {
@@ -35,11 +28,10 @@ export default function Portfolio() {
   const [loading, setLoading] = useState(true);
   const [notConnected, setNotConnected] = useState(false);
   const [closingId, setClosingId] = useState<string | null>(null);
+  const tilt = useDeviceTilt();
 
   const load = useCallback(async () => {
     const [f, h, p] = await Promise.all([getFunds(), getHoldings(), getPositions()]);
-    // Broker not connected OR Dhan session expired → prompt reconnect. A 409 /
-    // BROKER_TOKEN_EXPIRED is NOT a Zap-session problem, so we must NOT log out.
     setNotConnected(
       !f.ok &&
         (f.status === 409 ||
@@ -77,34 +69,36 @@ export default function Portfolio() {
     });
     setClosingId(null);
     if (res.ok) {
-      toast(
-        "success",
-        "Submitted",
-        `Close order sent to the market (${res.data.order?.status ?? "SUBMITTED"}).`
-      );
+      toast("success", "Submitted", `Close order sent to the market.`);
       load();
     } else {
       toast("error", "Could not close", res.description || res.error);
     }
   };
 
+  const refreshBtn = (
+    <button className="ph-action" onClick={load} aria-label="Refresh portfolio">
+      <IconRefresh size={17} stroke={2} />
+    </button>
+  );
+
   if (loading) {
     return (
       <div className="page">
-        <PageHeader title="Portfolio" />
+        <PageHeader title="Portfolio" action={refreshBtn} />
         <div className="screen">
-          <div className="card">
-            <div className="skeleton" style={{ width: 90, height: 13, marginBottom: 14 }} />
-            <div className="skeleton" style={{ width: 180, height: 34, marginBottom: 18 }} />
-            <div className="skeleton" style={{ width: "100%", height: 15, marginBottom: 11 }} />
-            <div className="skeleton" style={{ width: "100%", height: 15, marginBottom: 11 }} />
-            <div className="skeleton" style={{ width: "65%", height: 15 }} />
-          </div>
-          <div className="skeleton" style={{ width: 120, height: 22, margin: "22px 0 12px" }} />
+          <div className="skeleton" style={{ height: 168, borderRadius: 16, marginBottom: 24 }} />
+          <div className="skeleton" style={{ width: 110, height: 20, margin: "0 0 12px" }} />
           {[0, 1].map((i) => (
-            <div key={i} className="line-item">
-              <div className="skeleton" style={{ width: 140, height: 18, marginBottom: 9 }} />
-              <div className="skeleton" style={{ width: 100, height: 13 }} />
+            <div key={i} className="pf-item">
+              <div className="pf-row">
+                <div className="skeleton" style={{ width: 42, height: 42, borderRadius: 12 }} />
+                <div style={{ flex: 1 }}>
+                  <div className="skeleton" style={{ width: 130, height: 17, marginBottom: 8 }} />
+                  <div className="skeleton" style={{ width: 96, height: 12 }} />
+                </div>
+                <div className="skeleton" style={{ width: 74, height: 17 }} />
+              </div>
             </div>
           ))}
         </div>
@@ -112,97 +106,116 @@ export default function Portfolio() {
     );
   }
 
+  // motion-reactive shadow + specular highlight for the funds hero
+  const heroStyle: CSSProperties = {
+    boxShadow: `${(-tilt.x * 9).toFixed(1)}px ${(15 - tilt.y * 5).toFixed(1)}px 34px -16px rgba(0, 38, 16, 0.55)`,
+    "--hl-x": `${(50 + tilt.x * 34).toFixed(0)}%`,
+    "--hl-y": `${(32 + tilt.y * 28).toFixed(0)}%`,
+  } as CSSProperties;
+
   return (
     <div className="page">
-      <PageHeader title="Portfolio" />
+      <PageHeader title="Portfolio" action={refreshBtn} />
       <div className="screen">
-      {notConnected && (
-        <div className="card" style={{ borderColor: "var(--red)" }}>
-          <strong style={{ color: "var(--red)" }}>Reconnect Dhan</strong>
-          <p className="dim" style={{ marginTop: 6, marginBottom: 0 }}>
-            Your Dhan session has expired or isn't connected. Reconnect in the Broker tab to see your portfolio.
-          </p>
-        </div>
-      )}
-
-      {funds && (
-        <div className="card">
-          <p className="card-title">Funds</p>
-          <div style={{ margin: "10px 0" }}>
-            <div className="dim" style={{ fontSize: 12 }}>
-              Available
-            </div>
-            <div style={{ fontSize: 30, fontWeight: 800 }}>{inr(funds.availabelBalance)}</div>
+        {notConnected && (
+          <div className="reconnect-card">
+            <strong>Reconnect Dhan</strong>
+            <p>Your Dhan session has expired or isn't connected. Reconnect in the Broker tab to see your portfolio.</p>
           </div>
-          <Row k="Withdrawable" v={inr(funds.withdrawableBalance)} />
-          <Row k="Utilized" v={inr(funds.utilizedAmount)} />
-          <Row k="Collateral" v={inr(funds.collateralAmount)} />
-        </div>
-      )}
+        )}
 
-      <h3 className="section">Holdings</h3>
-      {holdings.length === 0 ? (
-        <p className="dim">No holdings.</p>
-      ) : (
-        holdings.map((h) => (
-          <div key={h.securityId} className="line-item">
-            <div className="sym-row">
-              <span style={{ fontSize: 16, fontWeight: 700 }}>{h.tradingSymbol}</span>
-              <Badge product="CNC" label="DELIVERY" />
-            </div>
-            <div className="dim" style={{ marginTop: 2 }}>
-              Qty {h.totalQty} · avg {inr(h.avgCostPrice)}
+        {funds && (
+          <div className="funds-hero" style={heroStyle}>
+            <div className="funds-label">Available balance</div>
+            <div className="funds-amount num">{money0(funds.availabelBalance)}</div>
+            <div className="funds-cells">
+              <div className="fc">
+                <IconCash size={17} className="fc-ic" />
+                <span className="fc-k">Withdrawable</span>
+                <span className="fc-v num">{money0(funds.withdrawableBalance)}</span>
+              </div>
+              <div className="fc">
+                <IconChartPie size={17} className="fc-ic" />
+                <span className="fc-k">Utilised</span>
+                <span className="fc-v num">{money0(funds.utilizedAmount)}</span>
+              </div>
+              <div className="fc">
+                <IconShieldHalf size={17} className="fc-ic" />
+                <span className="fc-k">Collateral</span>
+                <span className="fc-v num">{money0(funds.collateralAmount)}</span>
+              </div>
             </div>
           </div>
-        ))
-      )}
+        )}
 
-      <h3 className="section">Positions</h3>
-      {positions.length === 0 ? (
-        <p className="dim">No open positions.</p>
-      ) : (
-        positions.map((p, i) => {
-          const open = p.netQty !== 0;
-          return (
-            <div key={`${p.securityId}-${i}`} className="line-item">
-              <div className="row-between">
-                <div style={{ flex: 1 }}>
-                  <div className="sym-row">
-                    <span style={{ fontSize: 16, fontWeight: 700 }}>{p.tradingSymbol}</span>
-                    <Badge product={p.productType} />
-                  </div>
-                  <div className="dim" style={{ marginTop: 2 }}>
-                    {p.positionType} · net {p.netQty}
+        <h3 className="section">Holdings</h3>
+        {holdings.length === 0 ? (
+          <p className="pf-empty">No holdings.</p>
+        ) : (
+          holdings.map((h) => (
+            <div key={h.securityId} className="pf-item">
+              <div className="pf-row">
+                <LogoTile sym={h.tradingSymbol} />
+                <div className="pf-id">
+                  <div className="pf-sym">{h.tradingSymbol}</div>
+                  {companyName(h.tradingSymbol) && (
+                    <div className="pf-name">{companyName(h.tradingSymbol)}</div>
+                  )}
+                  <div className="pf-sub">
+                    {h.totalQty} shares · avg {money2(h.avgCostPrice)}
                   </div>
                 </div>
-                <span
-                  style={{
-                    color: p.unrealizedProfit >= 0 ? "var(--green)" : "var(--red)",
-                    fontWeight: 700,
-                  }}
-                >
-                  {p.unrealizedProfit >= 0 ? "+" : ""}
-                  {inr(p.unrealizedProfit)}
-                </span>
+                <div className="pf-fig">
+                  <div className="pf-fig-v num">{money0(h.totalQty * h.avgCostPrice)}</div>
+                  <div className="pf-fig-k">invested</div>
+                </div>
               </div>
-              {open && (
-                <button
-                  className="btn ghost-danger"
-                  style={{ marginTop: 12, padding: 9 }}
-                  onClick={() => onClose(p)}
-                  disabled={closingId === p.securityId}
-                >
-                  {closingId === p.securityId ? (
-                    <Spinner />
-                  ) : (
-                    `Close (${p.netQty > 0 ? "SELL" : "BUY"} ${Math.abs(p.netQty)})`
-                  )}
-                </button>
-              )}
             </div>
-          );
-        })
-      )}
+          ))
+        )}
+
+        <h3 className="section" style={{ marginTop: 24 }}>
+          Positions
+        </h3>
+        {positions.length === 0 ? (
+          <p className="pf-empty">No open positions.</p>
+        ) : (
+          positions.map((p, i) => {
+            const open = p.netQty !== 0;
+            const up = p.unrealizedProfit >= 0;
+            return (
+              <div key={`${p.securityId}-${i}`} className="pf-item">
+                <div className="pf-row">
+                  <LogoTile sym={p.tradingSymbol} />
+                  <div className="pf-id">
+                    <div className="pf-sym">{p.tradingSymbol}</div>
+                    {companyName(p.tradingSymbol) && (
+                      <div className="pf-name">{companyName(p.tradingSymbol)}</div>
+                    )}
+                    <div className="pf-sub">
+                      net {p.netQty} · {prettyProduct(p.productType)}
+                    </div>
+                  </div>
+                  <div className="pf-fig">
+                    <div className={up ? "pf-fig-v num up" : "pf-fig-v num down"}>
+                      {pnl(p.unrealizedProfit)}
+                    </div>
+                    <div className="pf-fig-k">unrealised P&amp;L</div>
+                  </div>
+                </div>
+                {open && (
+                  <button className="pf-close" onClick={() => onClose(p)} disabled={closingId === p.securityId}>
+                    {closingId === p.securityId ? (
+                      <Spinner />
+                    ) : (
+                      `Close · ${p.netQty > 0 ? "SELL" : "BUY"} ${Math.abs(p.netQty)}`
+                    )}
+                  </button>
+                )}
+              </div>
+            );
+          })
+        )}
       </div>
     </div>
   );

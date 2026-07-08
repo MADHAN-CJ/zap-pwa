@@ -5,3 +5,6 @@ dist-ssr
 .env
 .DS_Store
 dev-dist
+
+# TypeScript incremental build cache
+*.tsbuildinfo

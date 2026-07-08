@@ -20,15 +20,15 @@
   --sell-lit: #ff5a5f;
   --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Monaco, "Cascadia Mono",
     "Roboto Mono", monospace;
-  --r-card: 20px;
-  --r-tile: 12px;
+  --r-card: 15px;
+  --r-tile: 10px;
   --r-pill: 5px;
 
   /* Typography — use these tokens for all text so sizing/weight stays consistent */
   --fw-med: 500;
   --fw-bold: 700;
   --fw-heavy: 800;
-  --fs-title: 30px; /* page titles (Portfolio / Broker) */
+  --fs-title: 26px; /* page titles (Portfolio / Broker) */
   --fs-heading: 19px; /* section headings */
   --fs-item: 17px; /* list / card item titles */
   --fs-body: 15px; /* body text, buttons */
@@ -49,9 +49,9 @@
   --red: #e5484d;
   --blue: #007aff;
 
-  --r-sm: 8px;
-  --r-md: 12px;
-  --r-lg: 16px;
+  --r-sm: 7px;
+  --r-md: 10px;
+  --r-lg: 12px;
 
   --tabbar-h: 92px; /* full tab-bar footprint incl. its gap — for toast offset */
   --maxw: 520px;
@@ -210,7 +210,7 @@ a {
 .card {
   background: var(--card);
   border: 1px solid var(--hairline);
-  border-radius: 18px;
+  border-radius: 13px;
   padding: 16px;
   margin-bottom: 14px;
   box-shadow: 0 1px 2px rgba(12, 19, 34, 0.04), 0 8px 22px -14px rgba(12, 19, 34, 0.12);
@@ -233,7 +233,7 @@ a {
 }
 .section {
   font-size: var(--fs-heading);
-  font-weight: var(--fw-heavy);
+  font-weight: var(--fw-bold);
   margin: 8px 0 10px;
 }
 
@@ -348,7 +348,7 @@ a {
   gap: 11px;
   background: var(--card);
   border: 1px solid var(--hairline);
-  border-radius: 16px;
+  border-radius: 12px;
   padding: 11px 15px;
   box-shadow: 0 12px 32px -10px rgba(12, 19, 34, 0.24), 0 1px 2px rgba(12, 19, 34, 0.06);
   animation: toast-in 0.2s cubic-bezier(0.32, 1.4, 0.5, 1);
@@ -403,7 +403,7 @@ a {
 .modal {
   background: var(--card);
   border: 1px solid var(--hairline);
-  border-radius: 20px;
+  border-radius: 15px;
   padding: 20px;
   width: 100%;
   max-width: 360px;
@@ -463,18 +463,186 @@ a {
 }
 
 /* ---- Portfolio ---- */
-.line-item {
-  background: var(--card);
-  border: 1px solid var(--hairline);
+.reconnect-card {
+  margin-bottom: 18px;
+  padding: 15px 16px;
+  border-radius: 12px;
+  background: var(--sell-bg);
+  border: 1px solid rgba(229, 72, 77, 0.24);
+}
+.reconnect-card strong {
+  color: var(--sell);
+  font-size: var(--fs-body);
+  font-weight: var(--fw-bold);
+}
+.reconnect-card p {
+  margin: 6px 0 0;
+  color: var(--ink2);
+  font-size: var(--fs-label);
+  line-height: 1.45;
+}
+
+/* Funds hero — dark-green premium card with a motion-reactive highlight */
+.funds-hero {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  margin: 2px 0 26px;
+  padding: 20px;
   border-radius: 16px;
+  color: #fff;
+  background: linear-gradient(150deg, #0b3d21 0%, #06301a 55%, #04200f 100%);
+  box-shadow: 0 15px 34px -16px rgba(0, 38, 16, 0.55);
+  transition: box-shadow 0.12s linear;
+}
+.funds-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    360px 220px at var(--hl-x, 50%) var(--hl-y, 32%),
+    rgba(120, 240, 170, 0.16),
+    transparent 70%
+  );
+  transition: background 0.12s linear;
+}
+.funds-hero > * {
+  position: relative;
+  z-index: 1;
+}
+.funds-label {
+  font-size: var(--fs-caption);
+  font-weight: var(--fw-bold);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.5);
+}
+.funds-amount {
+  font-size: 38px;
+  font-weight: var(--fw-bold);
+  letter-spacing: -0.035em;
+  line-height: 1;
+  margin: 8px 0 20px;
+}
+.pf-name {
+  font-size: 12px;
+  font-weight: var(--fw-med);
+  color: var(--ink2);
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.funds-cells {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+.fc {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px;
+  border-radius: 11px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.fc-ic {
+  color: rgba(170, 240, 200, 0.9);
+}
+.fc-k {
+  font-size: 11px;
+  font-weight: var(--fw-med);
+  color: rgba(255, 255, 255, 0.55);
+}
+.fc-v {
+  font-size: 14px;
+  font-weight: var(--fw-bold);
+}
+
+/* Holding / position rows — consistent white cards, subtle shadow */
+.pf-item {
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+  border-radius: 12px;
   padding: 14px;
   margin-bottom: 10px;
   box-shadow: 0 1px 2px rgba(12, 19, 34, 0.04);
 }
-.sym-row {
+.pf-row {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 13px;
+}
+.pf-id {
+  flex: 1;
+  min-width: 0;
+}
+.pf-sym {
+  font-size: var(--fs-item);
+  font-weight: var(--fw-bold);
+  color: var(--ink);
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.pf-sub {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--fs-caption);
+  color: var(--muted);
+  margin-top: 3px;
+}
+.pf-fig {
+  flex: 0 0 auto;
+  text-align: right;
+  padding-left: 10px;
+}
+.pf-fig-v {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--fs-item);
+  font-weight: var(--fw-bold);
+  color: var(--ink);
+  white-space: nowrap;
+}
+.pf-fig-v.up {
+  color: var(--buy);
+}
+.pf-fig-v.down {
+  color: var(--sell);
+}
+.pf-fig-k {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 3px;
+}
+.pf-close {
+  width: 100%;
+  margin-top: 13px;
+  padding: 11px;
+  border-radius: 13px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--sell);
+  font-weight: var(--fw-bold);
+  font-size: 14px;
+  transition: transform 0.08s ease, background 0.15s ease;
+}
+.pf-close:active {
+  transform: scale(0.98);
+  background: #fdf5f5;
+}
+.pf-close:disabled {
+  opacity: 0.55;
+}
+.pf-empty {
+  color: var(--muted);
+  font-size: var(--fs-label);
+  padding: 2px 2px 6px;
 }
 
 /* ---- Broker ---- */
@@ -528,21 +696,41 @@ a {
   -webkit-backdrop-filter: saturate(160%) blur(20px);
   backdrop-filter: saturate(160%) blur(20px);
 }
+.ph-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
 .ph-brand {
   display: flex;
   align-items: center;
   gap: 9px;
-  color: #fff;
 }
 .ph-brand .wm {
   font-weight: var(--fw-bold);
   font-size: 16px;
   letter-spacing: -0.01em;
 }
+.ph-action {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 11px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.85);
+  transition: transform 0.08s ease, background 0.15s ease;
+}
+.ph-action:active {
+  transform: scale(0.94);
+  background: rgba(255, 255, 255, 0.16);
+}
 .ph-title {
-  margin: 16px 0 0;
+  margin: 14px 0 0;
   font-size: var(--fs-title);
-  font-weight: var(--fw-heavy);
+  font-weight: var(--fw-bold);
   letter-spacing: -0.03em;
 }
 
@@ -795,7 +983,7 @@ a {
   margin-top: 4px;
   padding: 15px;
   border: 0;
-  border-radius: 16px;
+  border-radius: 12px;
   background: var(--buy);
   color: #fff;
   font-weight: 800;
@@ -832,11 +1020,25 @@ a {
 .oc-sym {
   min-width: 0;
 }
-.oc-sym .t {
+.oc-title {
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+  min-width: 0;
+}
+.oc-title .t {
+  flex: 0 0 auto;
   font-size: var(--fs-item);
   font-weight: var(--fw-bold);
   color: var(--ink);
   letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+.oc-name {
+  flex: 0 1 auto;
+  min-width: 0;
+  font-size: 12.5px;
+  color: var(--muted);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -848,42 +1050,27 @@ a {
   margin-top: 3px;
   letter-spacing: 0.01em;
 }
-.oc-price {
-  flex: 0 0 auto; /* protected: never shrinks */
-  text-align: right;
-  white-space: nowrap;
-  padding-left: 8px; /* guaranteed gap so sides never collide */
-}
-.oc-price .p {
-  font-family: var(--mono);
-  font-variant-numeric: tabular-nums;
-  font-size: 16px;
-  font-weight: 700;
-  color: var(--ink);
-}
-.oc-price .ltp {
-  font-family: var(--mono);
-  font-variant-numeric: tabular-nums;
-  font-size: 11px;
-  color: var(--muted);
-  margin-top: 3px;
-}
-.oc-div {
-  border: 0;
-  border-top: 1px dashed var(--line);
-  margin: 14px 0;
-}
-.oc-txn {
+.oc-meta {
+  flex: 0 0 auto;
   display: flex;
-  align-items: center;
-  gap: 11px;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+.oc-time {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  color: var(--muted);
+  letter-spacing: 0.01em;
+  white-space: nowrap;
 }
 .side-pill {
-  padding: 4px 9px;
+  flex: 0 0 auto;
+  padding: 5px 11px;
   border-radius: var(--r-pill);
   font-size: 12px;
   font-weight: 800;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.03em;
 }
 .side-pill.buy {
   background: var(--buy-bg);
@@ -893,29 +1080,67 @@ a {
   background: var(--sell-bg);
   color: var(--sell);
 }
-.oc-qty {
-  font-size: 13px;
-  color: var(--ink2);
-  font-weight: 500;
+.oc-div {
+  border: 0;
+  border-top: 1px dashed var(--line);
+  margin: 15px 0;
 }
-.oc-figure {
-  margin-left: auto;
+/* money-led summary — the amount being committed leads (big, right-aligned like
+   a price tag), with qty·price as a quiet supporting line beneath. */
+.oc-money-top {
   display: flex;
-  flex-direction: column;
-  align-items: flex-end;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
 }
-.oc-figure .k {
+.oc-money-k {
   font-size: 11px;
+  font-weight: var(--fw-bold);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
   color: var(--muted);
-  font-weight: 500;
 }
-.oc-figure .v {
+.oc-money-v {
   font-family: var(--mono);
   font-variant-numeric: tabular-nums;
-  font-size: 14px;
-  font-weight: 700;
+  font-size: 22px;
+  font-weight: var(--fw-bold);
   color: var(--ink);
-  margin-top: 2px;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+.oc-money-sub {
+  margin-top: 5px;
+  font-family: var(--mono);
+  font-size: 11.5px;
+  color: var(--muted);
+  letter-spacing: 0.01em;
+}
+/* market orders: label + note on the left; qty in a subtly-filled chip on the
+   right, where a currency figure would otherwise sit. */
+.oc-money-mkt {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.oc-money-note {
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.4;
+}
+.oc-qty-chip {
+  flex: 0 0 auto;
+  padding: 7px 13px;
+  border-radius: var(--r-md);
+  background: rgba(12, 19, 34, 0.06);
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 13px;
+  font-weight: var(--fw-bold);
+  color: var(--ink);
+  white-space: nowrap;
 }
 .oc-actions {
   display: flex;

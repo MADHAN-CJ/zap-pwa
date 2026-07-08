@@ -36,3 +36,32 @@ export function logoUrl(symbol: string): string | null {
   if (!domain) return null;
   return `https://img.logo.dev/${domain}?token=${PUBLISHABLE_KEY}&size=80&format=png&retina=true`;
 }
+
+// Ticker → company name (same coverage as the domain map). Returns null for
+// unmapped symbols so the UI can fall back to just the ticker.
+const NAMES: Record<string, string> = {
+  RELIANCE: "Reliance Industries",
+  INFY: "Infosys",
+  TCS: "Tata Consultancy Services",
+  HDFCBANK: "HDFC Bank",
+  TATAMOTORS: "Tata Motors",
+  ICICIBANK: "ICICI Bank",
+  SBIN: "State Bank of India",
+  WIPRO: "Wipro",
+  ITC: "ITC",
+  AXISBANK: "Axis Bank",
+  KOTAKBANK: "Kotak Mahindra Bank",
+  LT: "Larsen & Toubro",
+  BHARTIARTL: "Bharti Airtel",
+  HINDUNILVR: "Hindustan Unilever",
+  MARUTI: "Maruti Suzuki",
+  SUNPHARMA: "Sun Pharma",
+  ASIANPAINT: "Asian Paints",
+  BAJFINANCE: "Bajaj Finance",
+  ADANIENT: "Adani Enterprises",
+  TATASTEEL: "Tata Steel",
+};
+
+export function companyName(symbol: string): string | null {
+  return NAMES[symbol.toUpperCase()] ?? null;
+}

@@ -1,5 +1,6 @@
 import { useRef, useState, type PointerEvent } from "react";
 import LogoTile from "@/components/LogoTile";
+import { companyName } from "@/lib/logos";
 import { haptics } from "@/lib/haptics";
 
 export type Side = "BUY" | "SELL";
@@ -12,13 +13,38 @@ export interface Order {
   qty: number;
   price: number | null;
   type: OrderType;
-  // Not always provided by the order API — shown only when present.
-  ltp?: number | null;
+  product: string;
+  // Optional — rendered only when present (the card is dynamic; no placeholders).
+  validity?: string | null;
+  trigger?: number | null;
+  createdAt?: string | null;
   margin?: number | null;
 }
 
 const money = (n: number) =>
   "₹" + n.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+function prettyProduct(p: string) {
+  const u = (p || "").toUpperCase();
+  if (u === "INTRADAY" || u === "MIS") return "Intraday";
+  if (u === "CNC" || u === "DELIVERY") return "Delivery";
+  return p || "";
+}
+
+// "just now" / "3m ago" / "2h ago" / "1d ago" — null when the timestamp is absent
+// or unparseable, so the caller can omit it entirely rather than show a dash.
+function timeAgo(iso?: string | null): string | null {
+  if (!iso) return null;
+  const t = new Date(iso).getTime();
+  if (Number.isNaN(t)) return null;
+  const s = Math.floor((Date.now() - t) / 1000);
+  if (s < 45) return "just now";
+  const m = Math.floor(s / 60);
+  if (m < 60) return `${Math.max(1, m)}m ago`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h ago`;
+  return `${Math.floor(h / 24)}d ago`;
+}
 
 const THRESHOLD = 110;
 const MAX = 300;
@@ -44,6 +70,25 @@ export default function OrderCard({
   const figure =
     order.margin != null ? order.margin : order.price != null ? order.price * order.qty : null;
   const figureLabel = order.margin != null && isBuy ? "Margin req." : "Order value";
+
+  const name = companyName(order.sym);
+  const drafted = timeAgo(order.createdAt);
+  const validity = order.validity ? order.validity.toUpperCase() : null;
+  const product = prettyProduct(order.product);
+  const subParts = [order.exch, product, validity].filter(Boolean);
+
+  // Money-led summary: lead with the number the person is actually committing
+  // (order value / margin), and drop qty·price to a supporting line. When there's
+  // no value (a market order with no known price), lead with the quantity instead
+  // — never a placeholder.
+  const shares = `${order.qty} ${order.qty === 1 ? "share" : "shares"}`;
+  const priceStr =
+    order.type === "MARKET" || order.price == null ? "at market" : `@ ${money(order.price)}`;
+  const trig = order.trigger != null ? ` · trigger ${money(order.trigger)}` : "";
+  // Currency cards get the price-tag hero (label left, value right); market
+  // orders have only qty, so they use a single left-aligned line instead.
+  const hasValue = figure != null;
+  const heroSub = `${shares} ${priceStr}${trig}`;
 
   const commit = (kind: "approve" | "reject") => {
     if (leaving) return;
@@ -122,40 +167,48 @@ export default function OrderCard({
         }}
         onPointerDown={down}
       >
-        {/* identity + price */}
+        {/* identity + side */}
         <div className="oc-head">
           <div className="oc-id">
             <LogoTile sym={order.sym} />
             <div className="oc-sym">
-              <div className="t">{order.sym}</div>
-              <div className="sub">
-                {order.exch} · {order.type}
+              <div className="oc-title">
+                <span className="t">{order.sym}</span>
+                {name && <span className="oc-name">{name}</span>}
               </div>
+              <div className="sub">{subParts.join(" · ")}</div>
             </div>
           </div>
-          <div className="oc-price">
-            <div className="p">
-              {order.type === "MARKET" ? "MKT" : order.price != null ? money(order.price) : "—"}
-            </div>
-            {order.ltp != null ? <div className="ltp">LTP {money(order.ltp)}</div> : null}
+          <div className="oc-meta">
+            <span className={isBuy ? "side-pill buy" : "side-pill sell"}>{order.side}</span>
+            {drafted && <span className="oc-time">{drafted}</span>}
           </div>
         </div>
 
         <hr className="oc-div" />
 
-        {/* transaction */}
-        <div className="oc-txn">
-          <span className={isBuy ? "side-pill buy" : "side-pill sell"}>{order.side}</span>
-          <span className="oc-qty">
-            Qty <span className="num">{order.qty}</span>
-          </span>
-          {figure != null ? (
-            <div className="oc-figure">
-              <span className="k">{figureLabel}</span>
-              <span className="v">{money(figure)}</span>
+        {/* money-led: what you're committing, with qty·price supporting it */}
+        <div className="oc-money">
+          {hasValue ? (
+            <>
+              <div className="oc-money-top">
+                <span className="oc-money-k">{figureLabel}</span>
+                <span className="oc-money-v num">{money(figure!)}</span>
+              </div>
+              <div className="oc-money-sub">{heroSub}</div>
+            </>
+          ) : (
+            <div className="oc-money-mkt">
+              <div>
+                <div className="oc-money-k">Market order</div>
+                <div className="oc-money-note">Fills at the live price{trig}</div>
+              </div>
+              <span className="oc-qty-chip num">{shares}</span>
             </div>
-          ) : null}
+          )}
         </div>
+
+        <hr className="oc-div" />
 
         {/* actions */}
         <div className="oc-actions">
