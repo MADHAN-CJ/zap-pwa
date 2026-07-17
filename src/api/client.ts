@@ -14,7 +14,14 @@ type RequestOptions = {
 
 export type ApiResponse<T> =
   | { ok: true; data: T }
-  | { ok: false; error: string; status: number; description?: string; code?: string };
+  | {
+      ok: false;
+      error: string;
+      status: number;
+      description?: string;
+      code?: string;
+      data?: any; // structured payload for coded errors (e.g. EDIS_REQUIRED)
+    };
 
 export async function apiRequest<T = unknown>(
   endpoint: string,
@@ -44,6 +51,7 @@ export async function apiRequest<T = unknown>(
         status: response.status,
         description: data?.description,
         code: data?.code,
+        data: data?.data,
       };
     }
     return { ok: true, data: data as T };

@@ -22,6 +22,24 @@ export const confirmAll = () =>
 export const deleteOrder = (id: string) =>
   apiRequest<{ success: boolean }>(`/dashboard/orders/${id}`, { method: "DELETE" });
 
+// ── eDIS (CDSL sell authorization for DDPI-less Dhan accounts) ────────────
+export const edisTpin = () =>
+  apiRequest<{ success: boolean; sent: boolean }>("/dashboard/edis/tpin", {
+    method: "POST",
+    body: {},
+  });
+
+export const edisForm = (body: { isin: string; qty: number; exchange?: "NSE" | "BSE" }) =>
+  apiRequest<{ success: boolean; edisFormHtml: string }>("/dashboard/edis/form", {
+    method: "POST",
+    body,
+  });
+
+export const edisStatus = (isin: string) =>
+  apiRequest<{ success: boolean; isin: string; aprvdQty?: number; totalQty?: number; status?: string }>(
+    `/dashboard/edis/status/${encodeURIComponent(isin)}`
+  );
+
 // Square off an open position — submits an opposite-side MARKET order.
 export const closePosition = (body: {
   securityId: string;

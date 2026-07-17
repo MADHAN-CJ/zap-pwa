@@ -3,7 +3,17 @@ import { Draft, placeDraft } from "@/api/orders";
 import { confirmAll, confirmOrder, deleteOrder, listPending } from "@/api/dashboard";
 import { Spinner, useUI } from "@/components/ui";
 import SwipeRow from "@/components/SwipeRow";
+import EdisWizard from "@/components/EdisWizard";
 import { inr } from "@/lib/format";
+
+// CDSL eDIS wizard target — set when a sell confirm returns EDIS_REQUIRED
+// (Dhan account without DDPI). The wizard walks T-PIN → CDSL page → confirm.
+type EdisState = {
+  draftId: string;
+  isin: string;
+  qty: number;
+  exchange: "NSE" | "BSE";
+};
 
 export default function Confirm() {
   const { toast, confirm } = useUI();
@@ -28,12 +38,21 @@ export default function Confirm() {
     load();
   }, [load]);
 
+  const [edis, setEdis] = useState<EdisState | null>(null);
+
   const onConfirm = async (id: string) => {
     setBusyId(id);
     const res = await confirmOrder(id);
     setBusyId(null);
     if (res.ok) toast("success", "Submitted", "Order sent to the market.");
-    else toast("error", "Could not confirm", res.description || res.error);
+    else if (!res.ok && res.code === "EDIS_REQUIRED" && res.data?.isin) {
+      setEdis({
+        draftId: id,
+        isin: res.data.isin,
+        qty: res.data.qty || 1,
+        exchange: res.data.exchange === "BSE" ? "BSE" : "NSE",
+      });
+    } else toast("error", "Could not confirm", res.description || res.error);
     load();
   };
 
@@ -99,6 +118,20 @@ export default function Confirm() {
       <p className="dim" style={{ marginTop: 4, marginBottom: 12 }}>
         Swipe a card right to confirm, left to delete.
       </p>
+
+      {edis && (
+        <EdisWizard
+          isin={edis.isin}
+          qty={edis.qty}
+          exchange={edis.exchange}
+          onConfirm={() => {
+            const id = edis.draftId;
+            setEdis(null);
+            onConfirm(id);
+          }}
+          onClose={() => setEdis(null)}
+        />
+      )}
 
       {showForm && (
         <div className="card" style={{ background: "var(--card-alt)", padding: 14 }}>
