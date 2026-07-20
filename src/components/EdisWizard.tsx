@@ -8,8 +8,9 @@ import { Spinner, useUI } from "@/components/ui";
 //   2 open CDSL's secure page where the T-PIN is entered (the PIN input lives
 //     on CDSL's page by design — it never touches Zap),
 //   3 wait for CDSL confirmation (auto-polled) → confirm the order.
-// Dhan is the final authority at placeOrder, so after CDSL reports complete a
-// "confirm anyway" escape hatch appears if our status poll lags.
+// Dhan is the final authority at placeOrder, so the poll is deliberately
+// permissive (see isAuthorized) and a "confirm anyway" escape hatch appears if
+// it still hasn't cleared after a few rounds.
 
 type Props = {
   isin: string;
@@ -21,6 +22,16 @@ type Props = {
 
 const POLL_MS = 4000;
 const RESEND_COOLDOWN_S = 10;
+
+// When Dhan reports an approved quantity, honour it. But live it often returns
+// a bare 200 with no quantity fields at all (observed 2026-07-20), and
+// demanding aprvdQty >= qty would spin here forever. A successful inquiry is
+// therefore enough to move on: Dhan re-validates the CDSL mark at placeOrder,
+// so a premature pass costs at most a retry, never a wrong trade.
+const isAuthorized = (d: { aprvdQty?: number }, qty: number): boolean => {
+  const approved = Number(d?.aprvdQty);
+  return Number.isFinite(approved) ? approved >= qty : true;
+};
 
 export default function EdisWizard({ isin, qty, exchange, onConfirm, onClose }: Props) {
   const { toast } = useUI();
@@ -48,7 +59,7 @@ export default function EdisWizard({ isin, qty, exchange, onConfirm, onClose }: 
 
   const check = async () => {
     const res = await edisStatus(isin);
-    if (res.ok && (Number(res.data.aprvdQty) || 0) >= qty) {
+    if (res.ok && isAuthorized(res.data, qty)) {
       stopPolling();
       setAuthorized(true);
     } else {
@@ -151,33 +162,29 @@ export default function EdisWizard({ isin, qty, exchange, onConfirm, onClose }: 
         </StepRow>
 
         <StepRow n={3} title="CDSL confirmation">
-          {authorized ? null : (
-            <>
-              <div className="row" style={{ gap: 10, alignItems: "center", display: "flex" }}>
-                <Spinner />
-                <span className="dim" style={{ fontSize: 13 }}>
-                  Waiting for CDSL… finish the T-PIN step in the other tab.
-                </span>
-              </div>
-              <div style={{ marginTop: 10, display: "flex", gap: 16 }}>
-                <button className="edis-link" onClick={check}>
-                  Check now
-                </button>
-                <button className="edis-link" onClick={openCdsl}>
-                  Reopen CDSL page
-                </button>
-              </div>
-              {polls >= 3 ? (
-                <p className="dim" style={{ fontSize: 12, marginTop: 10, marginBottom: 0 }}>
-                  Completed on CDSL but still waiting here? CDSL's status can lag — you can
-                  confirm anyway; Dhan makes the final check.{" "}
-                  <button className="edis-link" onClick={finish}>
-                    Confirm anyway
-                  </button>
-                </p>
-              ) : null}
-            </>
-          )}
+          <div style={{ gap: 10, alignItems: "center", display: "flex" }}>
+            <Spinner />
+            <span className="dim" style={{ fontSize: 13 }}>
+              Waiting for CDSL… finish the T-PIN step in the other tab.
+            </span>
+          </div>
+          <div style={{ marginTop: 10, display: "flex", gap: 16 }}>
+            <button className="edis-link" onClick={check}>
+              Check now
+            </button>
+            <button className="edis-link" onClick={openCdsl}>
+              Reopen CDSL page
+            </button>
+          </div>
+          {polls >= 3 ? (
+            <p className="dim" style={{ fontSize: 12, marginTop: 10, marginBottom: 0 }}>
+              Completed on CDSL but still waiting here? CDSL's status can lag — you can
+              confirm anyway; Dhan makes the final check.{" "}
+              <button className="edis-link" onClick={finish}>
+                Confirm anyway
+              </button>
+            </p>
+          ) : null}
         </StepRow>
 
         {authorized ? (
