@@ -2,8 +2,8 @@ import { getToken, triggerAuthError } from "@/store/auth";
 
 // API base URL from the build-time env (VITE_API_BASE_URL). Defaults to the
 // same UAT backend the Expo app uses.
-export const BASE_URL: string =
-  import.meta.env.VITE_API_BASE_URL ?? "https://uat.revise.network/zap-api/v1/api";
+export const BASE_URL: string = "http://127.0.0.1:4010/api"
+  // import.meta.env.VITE_API_BASE_URL ?? "https://uat.revise.network/zap-api/v1/api";
 
 type RequestOptions = {
   method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";

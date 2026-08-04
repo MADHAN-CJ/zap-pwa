@@ -7,6 +7,7 @@ import RequireAuth from "@/components/RequireAuth";
 import Login from "@/pages/Login";
 import Confirm from "@/pages/Confirm";
 import Portfolio from "@/pages/Portfolio";
+import Analysis from "@/pages/Analysis";
 import Broker from "@/pages/Broker";
 
 export default function App() {
@@ -36,6 +37,7 @@ export default function App() {
         >
           <Route path="/orders" element={<Confirm />} />
           <Route path="/portfolio" element={<Portfolio />} />
+          <Route path="/analysis" element={<Analysis />} />
           <Route path="/broker" element={<Broker />} />
         </Route>
 

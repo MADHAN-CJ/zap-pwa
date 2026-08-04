@@ -4,6 +4,7 @@ import { NavLink, Outlet } from "react-router-dom";
 const TABS = [
   { to: "/orders", label: "Confirm", glyph: "✓" },
   { to: "/portfolio", label: "Portfolio", glyph: "▦" },
+  { to: "/analysis", label: "Analysis", glyph: "◎" },
   { to: "/broker", label: "Broker", glyph: "⇄" },
 ];
 

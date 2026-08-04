@@ -10,6 +10,8 @@ import {
 import { closePosition } from "@/api/dashboard";
 import { Spinner, useUI } from "@/components/ui";
 import { inr } from "@/lib/format";
+import { useNavigate } from "react-router-dom";
+import AnalysisStartModal from "@/components/AnalysisStartModal";
 
 function Badge({ product, label }: { product?: string; label?: string }) {
   const p = String(product ?? "").toUpperCase();
@@ -34,6 +36,8 @@ export default function Portfolio() {
   const [loading, setLoading] = useState(true);
   const [notConnected, setNotConnected] = useState(false);
   const [closingId, setClosingId] = useState<string | null>(null);
+  const [analysing, setAnalysing] = useState<Position | null>(null);
+  const navigate = useNavigate();
 
   const load = useCallback(async () => {
     const [f, h, p] = await Promise.all([getFunds(), getHoldings(), getPositions()]);
@@ -170,22 +174,42 @@ export default function Portfolio() {
                 </span>
               </div>
               {open && (
-                <button
-                  className="btn ghost-danger"
-                  style={{ marginTop: 12, padding: 9 }}
-                  onClick={() => onClose(p)}
-                  disabled={closingId === p.securityId}
-                >
-                  {closingId === p.securityId ? (
-                    <Spinner />
-                  ) : (
-                    `Close (${p.netQty > 0 ? "SELL" : "BUY"} ${Math.abs(p.netQty)})`
-                  )}
-                </button>
+                <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
+                  <button
+                    className="btn secondary"
+                    style={{ flex: 1, padding: 9 }}
+                    onClick={() => setAnalysing(p)}
+                  >
+                    Analyse
+                  </button>
+                  <button
+                    className="btn ghost-danger"
+                    style={{ flex: 1, padding: 9 }}
+                    onClick={() => onClose(p)}
+                    disabled={closingId === p.securityId}
+                  >
+                    {closingId === p.securityId ? (
+                      <Spinner />
+                    ) : (
+                      `Close (${p.netQty > 0 ? "SELL" : "BUY"} ${Math.abs(p.netQty)})`
+                    )}
+                  </button>
+                </div>
               )}
             </div>
           );
         })
+      )}
+
+      {analysing && (
+        <AnalysisStartModal
+          position={analysing}
+          onClose={() => setAnalysing(null)}
+          onStarted={() => {
+            setAnalysing(null);
+            navigate("/analysis");
+          }}
+        />
       )}
     </div>
   );
