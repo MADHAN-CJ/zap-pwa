@@ -557,3 +557,12 @@ a {
   font-weight: 700;
   font-size: 13px;
 }
+
+/* Analysis card: "analysing…" banner — subtle pulse so the wait reads as alive. */
+.analysing-banner {
+  animation: analysing-pulse 1.6s ease-in-out infinite;
+}
+@keyframes analysing-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}

@@ -16,6 +16,8 @@ export type AnalysisRun = {
   confidence: "LOW" | "MEDIUM" | "HIGH" | null;
   alertSentAt: string | null;
   model: string | null;
+  runReason?: "SCHEDULED" | "MANUAL" | "TRIGGER"; // why the run happened
+  triggerId?: string | null;
   inputTokens: number | null;
   outputTokens: number | null;
   toolCalls: number | null;
@@ -105,4 +107,39 @@ export const stopAnalysis = (id: string) =>
   apiRequest<{ success: boolean; analysis: PositionAnalysis }>(
     `/dashboard/analysis/${id}`,
     { method: "DELETE" }
+  );
+
+// ── Price-watch triggers (the hybrid): levels the AI is watching between runs.
+export type AnalysisTrigger = {
+  id: string;
+  runId: string;
+  scope: "position" | "underlying";
+  condition: "below" | "above";
+  price: number;
+  reason: string | null;
+  securityId: string;
+  exchangeSegment: string;
+  status: "ARMED" | "FIRED" | "SUPERSEDED" | "CANCELLED";
+  firedAt: string | null;
+  firedPrice: number | null;
+  lastPrice: number | null; // latest LTP the poller observed
+  lastSeenAt: string | null;
+  createdAt: string;
+};
+
+export type WatcherStatus = {
+  enabled: boolean;
+  running: boolean;
+  marketOpen?: boolean;
+  // off | market_closed | watching | prices_unavailable
+  phase?: "off" | "market_closed" | "watching" | "prices_unavailable";
+  intervalMs: number;
+  lastTickAt: string | null;
+  lastFetchOkAt?: string | null;
+  lastFetchError?: { at: string; message: string } | null;
+};
+
+export const getAnalysisTriggers = (id: string) =>
+  apiRequest<{ success: boolean; triggers: AnalysisTrigger[]; watcher: WatcherStatus }>(
+    `/dashboard/analysis/${id}/triggers`
   );
