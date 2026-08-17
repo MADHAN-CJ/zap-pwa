@@ -1,4 +1,5 @@
 import { getToken, triggerAuthError } from "@/store/auth";
+import { setBrokerExpired } from "@/store/broker";
 
 // API base URL from the build-time env (VITE_API_BASE_URL). Defaults to the
 // same UAT backend the Expo app uses.
@@ -44,7 +45,12 @@ export async function apiRequest<T = unknown>(
     const data = await response.json().catch(() => null);
 
     if (!response.ok) {
+      // 401 = Zap session died → logout. 409 BROKER_TOKEN_EXPIRED = the daily
+      // Dhan token died → show the reconnect banner, NEVER log out (§10).
       if (response.status === 401) triggerAuthError();
+      if (response.status === 409 && data?.code === "BROKER_TOKEN_EXPIRED") {
+        setBrokerExpired(true);
+      }
       return {
         ok: false,
         error: data?.message ?? data?.error ?? "Something went wrong",

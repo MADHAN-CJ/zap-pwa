@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
+import { IconCheck, IconX, IconShieldCheck } from "@tabler/icons-react";
 import { edisForm, edisStatus, edisTpin } from "@/api/dashboard";
 import { Spinner, useUI } from "@/components/ui";
+import { haptics } from "@/lib/haptics";
 
 // CDSL eDIS authorization wizard — shown when confirming a sell on a Dhan
 // account without DDPI. Three steps, each ticked as it completes:
@@ -103,6 +105,7 @@ export default function EdisWizard({ isin, qty, exchange, onConfirm, onClose }: 
 
   const finish = () => {
     stopPolling();
+    haptics.success();
     onConfirm();
   };
 
@@ -120,7 +123,7 @@ export default function EdisWizard({ isin, qty, exchange, onConfirm, onClose }: 
     return (
       <div className="edis-step">
         <div className={`edis-badge${done ? " done" : active ? " active" : ""}`}>
-          {done ? "✓" : n}
+          {done ? <IconCheck size={14} stroke={3} /> : n}
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontWeight: 700, fontSize: 14, paddingTop: 3 }}>{title}</div>
@@ -134,9 +137,11 @@ export default function EdisWizard({ isin, qty, exchange, onConfirm, onClose }: 
     <div className="modal-backdrop" onClick={onClose}>
       <div className="modal" style={{ maxWidth: 400 }} onClick={(e) => e.stopPropagation()}>
         <div className="row-between" style={{ marginBottom: 2 }}>
-          <h3 style={{ margin: 0 }}>Authorize sale with CDSL</h3>
-          <button className="pill" onClick={onClose} aria-label="Close">
-            ✕
+          <h3 style={{ margin: 0, display: "flex", alignItems: "center", gap: 8 }}>
+            <IconShieldCheck size={20} stroke={1.9} /> Authorize sale with CDSL
+          </h3>
+          <button className="edis-close" onClick={onClose} aria-label="Close">
+            <IconX size={16} stroke={2.2} />
           </button>
         </div>
         <p style={{ marginTop: 6 }}>
@@ -188,12 +193,8 @@ export default function EdisWizard({ isin, qty, exchange, onConfirm, onClose }: 
         </StepRow>
 
         {authorized ? (
-          <button
-            className="btn"
-            style={{ marginTop: 14, background: "var(--green)", color: "#06210f" }}
-            onClick={finish}
-          >
-            Authorized ✓ — Confirm order
+          <button className="btn" style={{ marginTop: 14, background: "var(--buy)" }} onClick={finish}>
+            <IconCheck size={18} stroke={2.6} /> Authorized — Approve order
           </button>
         ) : null}
       </div>

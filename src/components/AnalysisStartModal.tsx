@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { IconBrain } from "@tabler/icons-react";
 import {
   AnalysisRun,
   PositionAnalysis,
@@ -7,6 +8,7 @@ import {
   priorAnalysisRuns,
 } from "@/api/analysis";
 import { Spinner, useUI } from "@/components/ui";
+import { haptics } from "@/lib/haptics";
 
 // Start-analysis modal: shown from a position row. Loads previous analysis
 // logs for the same security (if any), takes the user's instruction, and
@@ -65,9 +67,11 @@ export default function AnalysisStartModal({
     });
     setSubmitting(false);
     if (res.ok) {
+      haptics.success();
       toast("success", "Analysis started", "First iteration is running — check the Analysis tab.");
       onStarted();
     } else {
+      haptics.error();
       toast("error", "Could not start", res.description || res.error);
     }
   };
@@ -81,14 +85,15 @@ export default function AnalysisStartModal({
           <div
             style={{
               padding: "14px 16px",
-              borderRadius: 10,
-              border: "1px solid var(--red)",
+              borderRadius: 12,
+              border: "1px solid var(--sell)",
+              background: "var(--sell-bg)",
               fontSize: 13,
               lineHeight: 1.55,
             }}
           >
-            <strong style={{ color: "var(--red)", display: "block" }}>
-              ⚠ {position.tradingSymbol} already has an {existing.status} analysis.
+            <strong style={{ color: "var(--sell)", display: "block" }}>
+              {position.tradingSymbol} already has an {existing.status} analysis.
             </strong>
             <div className="dim" style={{ marginTop: 10 }}>
               <span style={{ fontWeight: 600 }}>Instruction:</span> {existing.instruction}
@@ -112,11 +117,18 @@ export default function AnalysisStartModal({
 
   return (
     <div className="modal-backdrop" onClick={onClose}>
-      <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxHeight: "80vh", overflowY: "auto" }}>
-        <h3>Analyse {position.tradingSymbol}</h3>
+      <div
+        className="modal"
+        onClick={(e) => e.stopPropagation()}
+        style={{ maxHeight: "80vh", overflowY: "auto" }}
+      >
+        <h3 style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <IconBrain size={20} stroke={1.9} /> Analyse {position.tradingSymbol}
+        </h3>
         <p className="dim" style={{ fontSize: 13 }}>
-          The AI re-analyses this position every 30 minutes during market hours and emails you
-          when it thinks you should act. It never places orders itself.
+          The AI re-analyses this position every 30 minutes during market hours (reading Dhan
+          candles, funds and — for options — the live option chain) and emails you when it thinks
+          you should act. It never places orders itself.
         </p>
 
         <textarea
@@ -133,14 +145,14 @@ export default function AnalysisStartModal({
             Previous analysis logs
           </p>
           {loadingPrior ? (
-            <Spinner />
+            <Spinner dark />
           ) : !prior || prior.length === 0 ? (
             <p className="dim" style={{ fontSize: 13, margin: 0 }}>
               No previous analysis for this instrument.
             </p>
           ) : (
             prior.slice(0, 8).map((r) => (
-              <div key={r.id} style={{ padding: "8px 0", borderTop: "1px solid var(--border, #333)" }}>
+              <div key={r.id} style={{ padding: "8px 0", borderTop: "1px solid var(--hairline)" }}>
                 <div className="dim" style={{ fontSize: 12 }}>
                   {new Date(r.startedAt).toLocaleString()} · {r.actionType ?? r.status}
                   {r.actionRequired ? " · ⚠ action was flagged" : ""}

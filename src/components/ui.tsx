@@ -6,6 +6,13 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { IconCheck, IconX, IconBolt } from "@tabler/icons-react";
+
+const TOAST_ICON = {
+  success: <IconCheck size={15} stroke={3} />,
+  error: <IconX size={15} stroke={3} />,
+  info: <IconBolt size={14} stroke={2.5} />,
+};
 
 /* ---------------- Spinner ---------------- */
 export function Spinner({ dark = false }: { dark?: boolean }) {
@@ -66,8 +73,11 @@ export function UIProvider({ children }: { children: ReactNode }) {
       <div className="toast-wrap">
         {toasts.map((t) => (
           <div key={t.id} className={`toast ${t.kind}`}>
-            <div className="toast-title">{t.title}</div>
-            {t.msg ? <div className="toast-msg">{t.msg}</div> : null}
+            <span className="toast-ic">{TOAST_ICON[t.kind]}</span>
+            <div className="toast-body">
+              <div className="toast-title">{t.title}</div>
+              {t.msg ? <div className="toast-msg">{t.msg}</div> : null}
+            </div>
           </div>
         ))}
       </div>

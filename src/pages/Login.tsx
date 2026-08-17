@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { requestOtp, verifyOtp } from "@/api/auth";
 import { saveAuth } from "@/store/auth";
 import { Spinner } from "@/components/ui";
+import LogoMark from "@/components/LogoMark";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -39,8 +40,11 @@ export default function Login() {
   return (
     <div className="app-shell">
       <div className="login-wrap">
-        <h1 className="brand">
-          <span style={{ color: "var(--accent)" }}>Zap</span> Trade
+        <h1 className="brand" style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <LogoMark size={40} />
+          <span>
+            <span style={{ color: "var(--accent)" }}>Zap</span> Trade
+          </span>
         </h1>
         <p className="dim" style={{ marginTop: 6, marginBottom: 32 }}>
           The AI drafts. You commit.

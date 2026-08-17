@@ -11,13 +11,25 @@ Installable web dashboard for **Zap Trade** — the human-confirmation surface f
 
 - **Login** — email → 6-digit OTP → JWT (stored in `localStorage`, auto-attached as
   Bearer; any `401` drops the session back to login).
-- **Confirm queue** — lists pending `DRAFT` orders. Swipe a card **right to confirm**
-  (submits to the market), **left to delete**; tap buttons also provided for
-  desktop/pointer. "Confirm all" and a quick-draft form (FAB).
-- **Portfolio** — funds, holdings, positions, and **Close position** (opposite-side
-  MARKET square-off).
+- **Orders** — live console header (count / buy-sell split) over swipeable order
+  cards: swipe **right to approve** (submits to the market), **left to reject**;
+  Approve/Reject buttons for desktop. "Approve all", a quick-draft composer with a
+  read-only margin preview, and the CDSL **eDIS wizard** for DDPI-less sells.
+- **Portfolio** — funds hero (motion-reactive), holdings, positions with **Analyse**
+  and **Close position** (opposite-side MARKET square-off).
+- **Analysis** — AI position trackers (runs, price-watch levels, run log).
 - **Broker** — Dhan connection status, connect via access-token **or** the api-key
-  consent flow, disconnect, sign out.
+  consent flow, disconnect, sign out. A 409 `BROKER_TOKEN_EXPIRED` shows a persistent
+  "Reconnect Dhan" banner (never a Zap logout).
+
+## Design
+
+Same design system as `kite-pwa/` (the Zerodha edition): light canvas, dark-green
+header bands, Tabler icons, `LogoTile` company logos (logo.dev + monogram fallback),
+haptics via `web-haptics`, iOS-style floating tab bar. All tokens live in
+`src/theme.css`; keep the two apps' theme files in sync when restyling.
+Icons are generated from `scripts/app-icon.png` via `node scripts/gen-icons.mjs`
+(macOS `sips`).
 
 ## Stack
 

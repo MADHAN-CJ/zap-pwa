@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { IconBolt, IconBrain, IconRefresh } from "@tabler/icons-react";
 import {
   AnalysisRun,
   AnalysisTrigger,
@@ -14,17 +16,20 @@ import {
   updateAnalysisInstruction,
 } from "@/api/analysis";
 import { Spinner, useUI } from "@/components/ui";
+import PageHeader from "@/components/PageHeader";
+import LogoTile from "@/components/LogoTile";
+import { haptics } from "@/lib/haptics";
 
 const STATUS_STYLE: Record<string, { label: string; color: string }> = {
-  ACTIVE: { label: "ACTIVE", color: "var(--green)" },
-  PAUSED: { label: "PAUSED", color: "var(--dim, #9ca3af)" },
-  STOPPED: { label: "STOPPED", color: "var(--dim, #9ca3af)" },
-  POSITION_CLOSED: { label: "POSITION CLOSED", color: "var(--dim, #9ca3af)" },
-  ERROR: { label: "NEEDS ATTENTION", color: "var(--red)" },
+  ACTIVE: { label: "ACTIVE", color: "var(--buy)" },
+  PAUSED: { label: "PAUSED", color: "var(--muted)" },
+  STOPPED: { label: "STOPPED", color: "var(--muted)" },
+  POSITION_CLOSED: { label: "POSITION CLOSED", color: "var(--muted)" },
+  ERROR: { label: "NEEDS ATTENTION", color: "var(--sell)" },
 };
 
 function StatusPill({ status }: { status: string }) {
-  const s = STATUS_STYLE[status] ?? { label: status, color: "var(--dim, #9ca3af)" };
+  const s = STATUS_STYLE[status] ?? { label: status, color: "var(--muted)" };
   return (
     <span className="badge" style={{ color: s.color, borderColor: s.color }}>
       {s.label}
@@ -32,24 +37,30 @@ function StatusPill({ status }: { status: string }) {
   );
 }
 
+const noteBox = (kind: "buy" | "sell" | "neutral"): React.CSSProperties => ({
+  marginTop: 8,
+  padding: "9px 11px",
+  borderRadius: 11,
+  fontSize: 13,
+  lineHeight: 1.5,
+  border: `1px solid ${kind === "sell" ? "var(--sell)" : kind === "buy" ? "var(--buy)" : "var(--line)"}`,
+  background: kind === "sell" ? "var(--sell-bg)" : kind === "buy" ? "var(--buy-bg)" : "var(--card-alt)",
+});
+
 function RunItem({ run }: { run: AnalysisRun }) {
   const flagged = !!run.actionRequired && run.actionType !== "HOLD";
   return (
-    <div style={{ padding: "10px 0", borderTop: "1px solid var(--border, #2a2a2a)" }}>
+    <div style={{ padding: "10px 0", borderTop: "1px solid var(--hairline)" }}>
       <div className="row-between">
         <span className="dim" style={{ fontSize: 12 }}>
           {new Date(run.startedAt).toLocaleString()}
         </span>
         <span
+          className="num"
           style={{
             fontSize: 12,
             fontWeight: 700,
-            color:
-              run.status === "FAILED"
-                ? "var(--red)"
-                : flagged
-                  ? "var(--red)"
-                  : "var(--green)",
+            color: run.status === "FAILED" ? "var(--sell)" : flagged ? "var(--sell)" : "var(--buy)",
           }}
         >
           {run.status === "RUNNING"
@@ -60,8 +71,8 @@ function RunItem({ run }: { run: AnalysisRun }) {
         </span>
       </div>
       {run.runReason === "TRIGGER" && (
-        <div style={{ fontSize: 11, marginTop: 2, color: "var(--red)", fontWeight: 700 }}>
-          ⚡ Triggered — a watched price level was crossed; analysed early
+        <div style={{ fontSize: 11, marginTop: 2, color: "var(--sell)", fontWeight: 700, display: "flex", gap: 4, alignItems: "center" }}>
+          <IconBolt size={12} stroke={2.4} /> Triggered — a watched price level was crossed; analysed early
         </div>
       )}
       {run.runReason === "MANUAL" && (
@@ -70,16 +81,8 @@ function RunItem({ run }: { run: AnalysisRun }) {
         </div>
       )}
       {flagged && run.actionReason && (
-        <div
-          style={{
-            marginTop: 6,
-            padding: "8px 10px",
-            borderRadius: 8,
-            border: "1px solid var(--red)",
-            fontSize: 13,
-          }}
-        >
-          <strong style={{ color: "var(--red)" }}>⚠ {run.actionType}:</strong> {run.actionReason}
+        <div style={noteBox("sell")}>
+          <strong style={{ color: "var(--sell)" }}>⚠ {run.actionType}:</strong> {run.actionReason}
           {run.alertSentAt ? (
             <div className="dim" style={{ fontSize: 11, marginTop: 4 }}>
               Email alert sent
@@ -119,14 +122,12 @@ function WatchingRow({
   const fmt = (n: number | null) =>
     n === null || n === undefined ? "—" : n.toLocaleString("en-IN", { maximumFractionDigits: 2 });
 
-  // Compact one-line state for the collapsed summary — the user sees this at
-  // a glance and opens the disclosure only if they want the levels.
   const stateColor =
     watcher.phase === "watching"
-      ? "var(--green)"
+      ? "var(--buy)"
       : watcher.phase === "prices_unavailable"
-        ? "var(--red)"
-        : "var(--dim, #9ca3af)";
+        ? "var(--sell)"
+        : "var(--muted)";
   const stateText =
     watcher.phase === "watching"
       ? "● live"
@@ -156,43 +157,40 @@ function WatchingRow({
         }
       >
         <span aria-hidden>▸</span>
-        <span>⚡ Watching · {countText}</span>
-        <span style={{ marginLeft: "auto", color: stateColor, fontWeight: watcher.phase === "prices_unavailable" ? 700 : 400 }}>
+        <IconBolt size={13} stroke={2.2} />
+        <span>Watching · {countText}</span>
+        <span style={{ marginLeft: "auto", color: stateColor, fontWeight: watcher.phase === "prices_unavailable" ? 700 : 500 }}>
           {stateText}
         </span>
       </summary>
-      <div
-        style={{
-          marginTop: 6,
-          padding: "8px 10px",
-          borderRadius: 8,
-          border: "1px solid var(--border, #2a2a2a)",
-          fontSize: 12,
-        }}
-      >
+      <div style={{ ...noteBox("neutral"), fontSize: 12 }}>
         <div className="dim" style={{ marginBottom: 4 }}>
-          Live price levels the AI is watching between runs (checked every{" "}
-          {Math.round(watcher.intervalMs / 1000)}s
-          {watcher.phase === "market_closed" ? " — resumes 09:15 IST" : ""}). Crossing one wakes the
-          analysis early; you're emailed only if it then says action is required.
+          Live price levels the AI is watching between runs (checked every {Math.round(watcher.intervalMs / 1000)}s
+          {watcher.phase === "market_closed" ? " — resumes 09:15 IST" : ""}). Crossing one wakes the analysis early;
+          you're emailed only if it then says action is required.
         </div>
         {triggers === null ? (
           <span className="dim">Loading…</span>
         ) : armed.length === 0 ? (
           <span className="dim">
-            No price levels armed — the AI arms them only when your instruction (or its analysis) has
-            a numeric line worth watching.
+            No price levels armed — the AI arms them only when your instruction (or its analysis) has a numeric line
+            worth watching.
           </span>
         ) : (
           armed.map((t) => (
             <div key={t.id} className="row-between" style={{ marginTop: 4 }}>
               <span>
                 {t.scope === "underlying" ? "Underlying" : symbol}{" "}
-                <strong>{t.condition === "below" ? "<" : ">"} {fmt(t.price)}</strong>
+                <strong className="num">
+                  {t.condition === "below" ? "<" : ">"} {fmt(t.price)}
+                </strong>
                 {t.reason ? <span className="dim"> · {t.reason}</span> : null}
               </span>
               <span className="dim">
-                now <strong style={{ color: "inherit" }}>{fmt(t.lastPrice)}</strong>
+                now{" "}
+                <strong className="num" style={{ color: "var(--ink)" }}>
+                  {fmt(t.lastPrice)}
+                </strong>
               </span>
             </div>
           ))
@@ -202,13 +200,15 @@ function WatchingRow({
   );
 }
 
-function AnalysisCard({
-  analysis,
-  onChanged,
-}: {
-  analysis: PositionAnalysis;
-  onChanged: () => void;
-}) {
+// "NSE_EQ" → "NSE", "NSE_FNO" → "NSE F&O"
+const prettySegment = (seg: string) => {
+  const [exch, kind] = (seg || "").split("_");
+  return kind === "FNO" ? `${exch} F&O` : exch || seg;
+};
+
+const smallBtn: React.CSSProperties = { flex: 1, padding: "9px 8px", minWidth: 90, fontSize: 13 };
+
+function AnalysisCard({ analysis, onChanged }: { analysis: PositionAnalysis; onChanged: () => void }) {
   const { toast, confirm } = useUI();
   const [expanded, setExpanded] = useState(false);
   const [runs, setRuns] = useState<AnalysisRun[] | null>(null);
@@ -257,12 +257,14 @@ function AnalysisCard({
     const res: any = await fn();
     setBusy(null);
     if (res.ok) {
+      haptics.light();
       onChanged();
       if (expanded) loadRuns();
     } else if (res.code === "ANALYSIS_RUN_IN_PROGRESS") {
       toast("info", "Already analysing", "A run is finishing right now — it'll show up in the log in a moment.");
       onChanged();
     } else {
+      haptics.error();
       toast("error", `Could not ${label}`, res.description || res.error);
     }
   };
@@ -293,9 +295,6 @@ function AnalysisCard({
 
   const latest = analysis.latestRun;
   const flagged = latest && !!latest.actionRequired && latest.actionType !== "HOLD";
-  // A run in flight — surfaced on the card itself so the user always knows
-  // the AI is working (the first run especially: 30–60s of otherwise-silent
-  // card right after "Start analysis" reads as broken).
   const running =
     latest?.status === "RUNNING" || (analysis.status === "ACTIVE" && !latest && !analysis.lastRunAt);
   const isFirstRun = running && !analysis.lastRunAt;
@@ -309,13 +308,23 @@ function AnalysisCard({
   const terminal = analysis.status === "STOPPED" || analysis.status === "POSITION_CLOSED";
 
   return (
-    <div className="card" style={flagged ? { borderColor: "var(--red)" } : undefined}>
-      <div className="row-between">
-        <div className="sym-row">
-          <span style={{ fontSize: 16, fontWeight: 700 }}>{analysis.symbol}</span>
-          <StatusPill status={analysis.status} />
+    <div className="card" style={flagged ? { borderColor: "var(--sell)" } : undefined}>
+      <div className="row-between" style={{ alignItems: "flex-start" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
+          <LogoTile sym={analysis.symbol} />
+          <div style={{ minWidth: 0 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+              <span style={{ fontSize: 16, fontWeight: 700 }}>{analysis.symbol}</span>
+              <StatusPill status={analysis.status} />
+            </div>
+            <div className="dim" style={{ fontSize: 12, marginTop: 2 }}>
+              {prettySegment(analysis.exchangeSegment)}
+              {analysis.positionType ? ` · ${analysis.positionType}` : ""}
+              {analysis.productType ? ` · ${analysis.productType}` : ""}
+            </div>
+          </div>
         </div>
-        <span className="dim" style={{ fontSize: 12 }}>
+        <span className="dim num" style={{ fontSize: 12, whiteSpace: "nowrap" }}>
           {analysis.lastRunAt
             ? new Date(analysis.lastRunAt).toLocaleTimeString()
             : running
@@ -327,45 +336,21 @@ function AnalysisCard({
       </div>
 
       {running && (
-        <div
-          className="analysing-banner"
-          role="status"
-          aria-live="polite"
-          style={{
-            marginTop: 8,
-            padding: "8px 10px",
-            borderRadius: 8,
-            border: "1px solid var(--green)",
-            fontSize: 13,
-            display: "flex",
-            alignItems: "center",
-            gap: 8,
-          }}
-        >
+        <div role="status" aria-live="polite" style={{ ...noteBox("buy"), display: "flex", alignItems: "center", gap: 8 }}>
           <Spinner />
           <span>{runningLabel}</span>
         </div>
       )}
 
       {flagged && !running && (
-        <div
-          style={{
-            marginTop: 8,
-            padding: "8px 10px",
-            borderRadius: 8,
-            border: "1px solid var(--red)",
-            fontSize: 13,
-          }}
-        >
-          <strong style={{ color: "var(--red)" }}>⚠ Action suggested: {latest!.actionType}</strong>
+        <div style={noteBox("sell")}>
+          <strong style={{ color: "var(--sell)" }}>⚠ Action suggested: {latest!.actionType}</strong>
           {latest!.actionReason ? <div style={{ marginTop: 4 }}>{latest!.actionReason}</div> : null}
         </div>
       )}
 
       {analysis.status === "ERROR" && analysis.lastError && (
-        <p style={{ color: "var(--red)", fontSize: 13, marginTop: 8, marginBottom: 0 }}>
-          {analysis.lastError}
-        </p>
+        <p style={{ color: "var(--sell)", fontSize: 13, marginTop: 8, marginBottom: 0 }}>{analysis.lastError}</p>
       )}
 
       {latest?.summary && !expanded && (
@@ -388,11 +373,11 @@ function AnalysisCard({
             style={{ resize: "vertical", width: "100%" }}
           />
           <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
-            <button className="btn secondary" style={{ flex: 1, padding: 8 }} onClick={() => setEditing(false)}>
+            <button className="btn secondary" style={{ flex: 1, padding: 9 }} onClick={() => setEditing(false)}>
               Cancel
             </button>
-            <button className="btn" style={{ flex: 1, padding: 8 }} onClick={saveInstruction} disabled={busy === "save"}>
-              {busy === "save" ? <Spinner /> : "Save"}
+            <button className="btn" style={{ flex: 1, padding: 9 }} onClick={saveInstruction} disabled={busy === "save"}>
+              {busy === "save" ? <Spinner dark /> : "Save"}
             </button>
           </div>
         </div>
@@ -407,34 +392,24 @@ function AnalysisCard({
           <>
             <button
               className="btn secondary"
-              style={{ flex: 1, padding: 8, minWidth: 90 }}
+              style={smallBtn}
               onClick={() => act("run now", () => runAnalysisNow(analysis.id))}
               disabled={!!busy}
             >
-              {busy === "run now" ? <Spinner dark /> : "Run now"}
+              {busy === "run now" ? <Spinner /> : "Run now"}
             </button>
             {analysis.status === "ACTIVE" ? (
-              <button
-                className="btn secondary"
-                style={{ flex: 1, padding: 8, minWidth: 90 }}
-                onClick={() => act("pause", () => pauseAnalysis(analysis.id))}
-                disabled={!!busy}
-              >
-                {busy === "pause" ? <Spinner dark /> : "Pause"}
+              <button className="btn secondary" style={smallBtn} onClick={() => act("pause", () => pauseAnalysis(analysis.id))} disabled={!!busy}>
+                {busy === "pause" ? <Spinner /> : "Pause"}
               </button>
             ) : (
-              <button
-                className="btn secondary"
-                style={{ flex: 1, padding: 8, minWidth: 90 }}
-                onClick={() => act("resume", () => resumeAnalysis(analysis.id))}
-                disabled={!!busy}
-              >
-                {busy === "resume" ? <Spinner dark /> : "Resume"}
+              <button className="btn secondary" style={smallBtn} onClick={() => act("resume", () => resumeAnalysis(analysis.id))} disabled={!!busy}>
+                {busy === "resume" ? <Spinner /> : "Resume"}
               </button>
             )}
             <button
               className="btn secondary"
-              style={{ flex: 1, padding: 8, minWidth: 90 }}
+              style={smallBtn}
               onClick={() => {
                 setDraftInstruction(analysis.instruction);
                 setEditing(true);
@@ -443,21 +418,12 @@ function AnalysisCard({
             >
               Edit
             </button>
-            <button
-              className="btn ghost-danger"
-              style={{ flex: 1, padding: 8, minWidth: 90 }}
-              onClick={onStop}
-              disabled={!!busy}
-            >
+            <button className="btn ghost-danger" style={smallBtn} onClick={onStop} disabled={!!busy}>
               {busy === "stop" ? <Spinner /> : "Stop"}
             </button>
           </>
         )}
-        <button
-          className="btn secondary"
-          style={{ flex: 1, padding: 8, minWidth: 90 }}
-          onClick={() => setExpanded((e) => !e)}
-        >
+        <button className="btn secondary" style={smallBtn} onClick={() => setExpanded((e) => !e)}>
           {expanded ? "Hide log" : "Show log"}
         </button>
       </div>
@@ -480,48 +446,59 @@ function AnalysisCard({
 }
 
 export default function Analysis() {
+  const navigate = useNavigate();
   const [analyses, setAnalyses] = useState<PositionAnalysis[] | null>(null);
 
   const load = useCallback(async () => {
     const res = await listAnalyses();
     if (res.ok) setAnalyses(res.data.analyses);
-    else if (analyses === null) setAnalyses([]);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    else setAnalyses((prev) => prev ?? []);
   }, []);
 
   useEffect(() => {
     load();
-    // Poll so background runs (first run, cron, run-now) show up live.
+    // Poll so background runs (first run, cron, run-now, triggers) show up live.
     const t = setInterval(load, 5000);
     return () => clearInterval(t);
   }, [load]);
 
-  if (analyses === null) {
-    return (
-      <div className="screen">
-        <div className="center-fill">
-          <Spinner />
-        </div>
-      </div>
-    );
-  }
+  const refreshBtn = (
+    <button className="ph-action" onClick={load} aria-label="Refresh analyses">
+      <IconRefresh size={17} stroke={2} />
+    </button>
+  );
 
   return (
-    <div className="screen">
-      <div className="screen-header" />
-      <h3 className="section">Position analysis</h3>
-      {analyses.length === 0 ? (
-        <div className="card">
-          <p className="card-title">Nothing tracked yet</p>
-          <p className="dim" style={{ marginBottom: 0 }}>
-            Open the Portfolio tab and tap <strong>Analyse</strong> on a position. The AI will
-            re-check it every 30 minutes during market hours and email you when action is needed —
-            it never trades on its own.
-          </p>
-        </div>
-      ) : (
-        analyses.map((a) => <AnalysisCard key={a.id} analysis={a} onChanged={load} />)
-      )}
+    <div className="page">
+      <PageHeader title="Analysis" action={refreshBtn} />
+      <div className="screen">
+        {analyses === null ? (
+          <>
+            {[0, 1].map((i) => (
+              <div key={i} className="card">
+                <div className="skeleton" style={{ width: 160, height: 18, marginBottom: 10 }} />
+                <div className="skeleton" style={{ width: "90%", height: 12, marginBottom: 6 }} />
+                <div className="skeleton" style={{ width: "70%", height: 12 }} />
+              </div>
+            ))}
+          </>
+        ) : analyses.length === 0 ? (
+          <div className="card">
+            <p className="card-title" style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <IconBrain size={18} stroke={1.9} /> Nothing tracked yet
+            </p>
+            <p className="dim" style={{ marginBottom: 12 }}>
+              Open the Portfolio tab and tap <strong>Analyse</strong> on a position. The AI will re-check it every
+              30 minutes during market hours and email you when action is needed — it never trades on its own.
+            </p>
+            <button className="btn secondary" style={{ padding: 10 }} onClick={() => navigate("/portfolio")}>
+              Go to Portfolio
+            </button>
+          </div>
+        ) : (
+          analyses.map((a) => <AnalysisCard key={a.id} analysis={a} onChanged={load} />)
+        )}
+      </div>
     </div>
   );
 }
