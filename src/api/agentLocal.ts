@@ -20,7 +20,9 @@ async function chat(system: string, messages: Msg[], max_tokens = 700): Promise<
 }
 
 const positionLine = (p: PositionRef) =>
-  `${p.symbol}, ${p.side} ${p.qty} @ ₹${p.entryPrice}${p.expiry ? `, expiry ${p.expiry}` : ""}`;
+  p.side
+    ? `${p.symbol}, ${p.side} ${p.qty} @ ₹${p.entryPrice}${p.expiry ? `, expiry ${p.expiry}` : ""}`
+    : `${p.symbol}${p.expiry ? `, expiry ${p.expiry}` : ""} (the trader hasn't stated a held position; ask about their exposure as part of question 1 if it matters)`;
 
 const INTERVIEW_SYSTEM = (p: PositionRef) => `You are the Position Agent for an Indian options/futures trader — a second, sharper pair of eyes on THEIR reasoning. You never instruct, never recommend an action, never say exit/hold/buy/sell as advice.
 

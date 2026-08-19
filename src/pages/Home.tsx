@@ -194,8 +194,9 @@ export default function Home() {
                       }}
                     >
                       <span className="mono" style={{ fontSize: 13, color: "var(--ink)" }}>
-                        {w.side} {w.qty} · ₹{w.entryPrice.toLocaleString("en-IN")}
-                        {w.expiry ? ` · ${w.expiry}` : ""}
+                        {w.side
+                          ? `${w.side} ${w.qty} · ₹${w.entryPrice?.toLocaleString("en-IN")}${w.expiry ? ` · ${w.expiry}` : ""}`
+                          : w.expiry ?? ""}
                       </span>
                       <span style={{ fontSize: 13, color: "var(--ink-3)", whiteSpace: "nowrap" }}>
                         {w.lastUpdateText}

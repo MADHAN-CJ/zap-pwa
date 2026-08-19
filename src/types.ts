@@ -7,9 +7,11 @@ export type Mood = "Uneasy" | "Comfortable" | "Confident" | "A bit greedy";
 
 export interface PositionRef {
   symbol: string;
-  side: "long" | "short";
-  qty: number;
-  entryPrice: number;
+  /* Present only when the trader actually holds it (broker-sourced). A pick
+     from the market list carries just the symbol. */
+  side?: "long" | "short";
+  qty?: number;
+  entryPrice?: number;
   expiry?: string;
   pnl?: number;
 }
@@ -17,9 +19,9 @@ export interface PositionRef {
 export interface Watch {
   id: string;
   symbol: string;
-  side: "long" | "short";
-  qty: number;
-  entryPrice: number;
+  side?: "long" | "short";
+  qty?: number;
+  entryPrice?: number;
   expiry?: string;
   thesis: string; // trader's own words, from the interview
   status: WatchStatus;

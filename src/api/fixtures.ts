@@ -103,6 +103,16 @@ const INSTRUMENTS: { symbol: string; name: string }[] = [
   { symbol: "INFY", name: "Infosys" },
   { symbol: "SILVERMIC", name: "Silver Micro 30 Sep (MCX)" },
   { symbol: "GOLDPETAL", name: "Gold Petal 30 Sep (MCX)" },
+  { symbol: "NIFTY FUT", name: "NIFTY 26 Aug Futures" },
+  { symbol: "BANKNIFTY FUT", name: "BANKNIFTY 26 Aug Futures" },
+  { symbol: "ICICIBANK", name: "ICICI Bank" },
+  { symbol: "SBIN", name: "State Bank of India" },
+  { symbol: "TATAMOTORS", name: "Tata Motors" },
+  { symbol: "BAJFINANCE", name: "Bajaj Finance" },
+  { symbol: "ADANIENT", name: "Adani Enterprises" },
+  { symbol: "ITC", name: "ITC" },
+  { symbol: "CRUDEOIL", name: "Crude Oil 19 Sep (MCX)" },
+  { symbol: "NATURALGAS", name: "Natural Gas 26 Aug (MCX)" },
 ];
 
 export async function fxSearchInstruments(q: string) {
@@ -111,7 +121,7 @@ export async function fxSearchInstruments(q: string) {
   if (!needle) return INSTRUMENTS; // browse: the default market list
   return INSTRUMENTS.filter(
     (i) => i.symbol.toLowerCase().includes(needle) || i.name.toLowerCase().includes(needle)
-  ).slice(0, 8);
+  ).slice(0, 20);
 }
 
 // ---------- interview script (stand-in for the backend agent) ----------
@@ -135,7 +145,9 @@ export async function fxCreateWatch(position: PositionRef): Promise<{ id: string
     id,
     step: {
       agentMessages: [
-        `${position.symbol}, ${position.side} ${position.qty}. Got it.`,
+        position.side
+          ? `${position.symbol}, ${position.side} ${position.qty}. Got it.`
+          : `${position.symbol}. Got it.`,
         "Why'd you take this one? In your own words, what's the read?",
       ],
       done: false,
@@ -207,9 +219,9 @@ export async function fxStart(id: string): Promise<Watch> {
   const w: Watch = {
     id,
     symbol: d?.position.symbol ?? "?",
-    side: d?.position.side ?? "long",
-    qty: d?.position.qty ?? 0,
-    entryPrice: d?.position.entryPrice ?? 0,
+    side: d?.position.side,
+    qty: d?.position.qty,
+    entryPrice: d?.position.entryPrice,
     expiry: d?.position.expiry,
     thesis: d?.answers[0]?.replace(/^__retry:/, "") ?? "",
     status: "holding",

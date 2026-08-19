@@ -124,7 +124,7 @@ export async function askAgent(
     const d = await fx.fxGetWatch(id);
     if (!d) return fx.fxAsk(id, question);
     const ctx = [
-      `Position: ${d.watch.symbol}, ${d.watch.side} ${d.watch.qty} @ ₹${d.watch.entryPrice}${d.watch.expiry ? `, expiry ${d.watch.expiry}` : ""}. Status: ${d.watch.status}.`,
+      `Position: ${d.watch.symbol}${d.watch.side ? `, ${d.watch.side} ${d.watch.qty} @ ₹${d.watch.entryPrice}` : ""}${d.watch.expiry ? `, expiry ${d.watch.expiry}` : ""}. Status: ${d.watch.status}.`,
       `Trader's thesis, their words: ${d.watch.thesis}`,
       `Watch-items: ${d.items.map((i) => `${i.label} [${i.kind}] — ${i.state}`).join("; ")}`,
       d.watch.changeSummary ? `What changed: ${d.watch.changeSummary}` : "",
