@@ -46,7 +46,8 @@ GET   /watches/:id/feed            → { success, feed[] }                    //
 POST  /watches/:id/ask             { question, history? } → { success, turn: AskTurn }
 GET   /digest?date=                → { success, entries[] }
 GET   /instruments/search?q=       → { success, instruments: [{ symbol, name }] }
-                                   // market-wide search for Add:Pick's search bar
+                                   // market-wide search for Add:Pick; empty q returns
+                                   // a browsable default list (no pricing needed)
 ```
 
 `InterviewStep = { agentMessages: string[], done: boolean, expectsMood?: boolean }`.

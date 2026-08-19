@@ -2,16 +2,13 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "motion/react";
 import type { CSSProperties } from "react";
-import { Screen } from "@/components/Screen";
 import { IconSearch } from "@tabler/icons-react";
-import { createWatch, listOpenPositions, searchInstruments } from "@/api/watch";
+import { Screen } from "@/components/Screen";
+import { createWatch, searchInstruments } from "@/api/watch";
 import { pressScale, spring, springSoft } from "@/lib/motion";
 import { tapHaptic } from "@/lib/haptics";
 import * as addFlow from "@/store/addFlow";
 import type { PositionRef } from "@/types";
-
-const fmtPnl = (pnl: number) =>
-  `${pnl >= 0 ? "+" : "−"}₹${Math.abs(pnl).toLocaleString("en-IN", { maximumFractionDigits: 0 })}`;
 
 const inputStyle: CSSProperties = {
   width: "100%",
@@ -24,50 +21,38 @@ const inputStyle: CSSProperties = {
   outline: "none",
 };
 
+type Instrument = { symbol: string; name: string };
+
+/** /watch/new — pick from the whole market (search or browse), then state
+ *  your trade (side/qty/entry). Backend: GET /instruments/search?q=. */
 export default function AddPick() {
   const nav = useNavigate();
-  const [positions, setPositions] = useState<PositionRef[] | null>(null);
-  const [busy, setBusy] = useState<string | null>(null); // symbol of the card being started
+  const [query, setQuery] = useState("");
+  const [results, setResults] = useState<Instrument[] | null>(null);
+  const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [manualOpen, setManualOpen] = useState(false);
-  const [mSymbol, setMSymbol] = useState("");
+  // Trade details, asked once an instrument is chosen.
+  const [chosen, setChosen] = useState<string | null>(null);
   const [mSide, setMSide] = useState<"long" | "short">("long");
   const [mQty, setMQty] = useState("");
   const [mEntry, setMEntry] = useState("");
   const [mExpiry, setMExpiry] = useState("");
-  const [query, setQuery] = useState("");
-  const [results, setResults] = useState<{ symbol: string; name: string }[] | null>(null);
 
-  // Market-wide instrument search, debounced. Backend: GET /instruments/search.
+  // Market search, debounced. Empty query browses the default list.
   useEffect(() => {
-    const q = query.trim();
-    if (!q) {
-      setResults(null);
-      return;
-    }
     const timer = setTimeout(() => {
-      searchInstruments(q)
+      searchInstruments(query.trim())
         .then(setResults)
-        .catch(() => setResults([]));
-    }, 250);
+        .catch(() => setError("Couldn't load the market list."));
+    }, query.trim() ? 250 : 0);
     return () => clearTimeout(timer);
   }, [query]);
-
-  useEffect(() => {
-    let live = true;
-    listOpenPositions()
-      .then((p) => live && setPositions(p))
-      .catch(() => live && setError("Couldn't load positions."));
-    return () => {
-      live = false;
-    };
-  }, []);
 
   async function start(pos: PositionRef) {
     if (busy) return;
     tapHaptic();
     setError(null);
-    setBusy(pos.symbol);
+    setBusy(true);
     addFlow.setPosition(pos);
     try {
       const { id, step } = await createWatch(pos);
@@ -77,14 +62,14 @@ export default function AddPick() {
       nav("/watch/new/interview");
     } catch {
       setError("Couldn't start. Try again.");
-      setBusy(null);
+      setBusy(false);
     }
   }
 
-  const manualValid = mSymbol.trim() && Number(mQty) > 0 && Number(mEntry) > 0;
+  const detailsValid = Number(mQty) > 0 && Number(mEntry) > 0;
 
   return (
-    <Screen back="/watch" tag={positions ? `${positions.length} open` : "…"}>
+    <Screen back="/watch" tag="market">
       <p style={{ fontSize: 17, lineHeight: 1.4, color: "var(--ink)", padding: "4px 0 18px" }}>
         Which one is on your mind?{" "}
         <span style={{ color: "var(--ink-2)" }}>Start with one. Add the others later.</span>
@@ -105,48 +90,51 @@ export default function AddPick() {
         />
         <input
           value={query}
-          onChange={(e) => setQuery(e.target.value)}
+          onChange={(e) => {
+            setQuery(e.target.value);
+            setChosen(null);
+          }}
           placeholder="Search any position in the market…"
           style={{ ...inputStyle, background: "var(--surface-2)", paddingLeft: 40 }}
         />
       </div>
 
-      {error && (
-        <p style={{ fontSize: 13, color: "var(--flipped)", paddingBottom: 10 }}>{error}</p>
+      {error && <p style={{ fontSize: 13, color: "var(--flipped)", paddingBottom: 10 }}>{error}</p>}
+
+      {!results && !error && (
+        <p style={{ fontSize: 13, color: "var(--ink-3)" }}>Loading the market…</p>
       )}
 
-      {/* Search results: market instruments. Picking one prefills manual entry
-          (side/qty/entry are the trader's to state — it isn't a held position). */}
-      {results !== null && (
-        <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 8 }}>
-          {results.length === 0 && (
-            <p style={{ fontSize: 13, color: "var(--ink-3)", padding: "4px 2px" }}>
-              Nothing matches. Try the symbol name.
-            </p>
-          )}
-          {results.map((r, i) => (
+      {results?.length === 0 && (
+        <p style={{ fontSize: 13, color: "var(--ink-3)", padding: "4px 2px" }}>
+          Nothing matches. Try the symbol name.
+        </p>
+      )}
+
+      {/* Plain market rows — no pricing, no side. Those are stated after picking. */}
+      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        {results?.map((r, i) => (
+          <div key={r.symbol}>
             <motion.button
-              key={r.symbol}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ ...springSoft, delay: i * 0.03 }}
               whileTap={{ scale: pressScale }}
               onClick={() => {
                 tapHaptic();
-                setMSymbol(r.symbol);
-                setManualOpen(true);
-                setQuery("");
+                setChosen(chosen === r.symbol ? null : r.symbol);
               }}
               style={{
                 display: "flex",
                 alignItems: "baseline",
                 justifyContent: "space-between",
                 gap: 10,
+                width: "100%",
                 textAlign: "left",
-                padding: "12px 14px",
+                padding: "14px 16px",
                 background: "var(--surface)",
                 borderRadius: "var(--radius-sm)",
-                boxShadow: "var(--shadow)",
+                boxShadow: chosen === r.symbol ? "0 0 0 1px var(--brand)" : "var(--shadow)",
               }}
             >
               <span style={{ fontSize: 15, fontWeight: 600 }}>{r.symbol}</span>
@@ -162,197 +150,100 @@ export default function AddPick() {
                 {r.name}
               </span>
             </motion.button>
-          ))}
-        </div>
-      )}
 
-      {!positions && !error && results === null && (
-        <p style={{ fontSize: 13, color: "var(--ink-3)" }}>Loading positions…</p>
-      )}
-
-      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-        {results === null && positions?.map((p, i) => {
-          const pressed = busy === p.symbol;
-          return (
-            <motion.button
-              key={`${p.symbol}-${i}`}
-              initial={{ opacity: 0, y: 14 }}
-              animate={{ opacity: busy && !pressed ? 0.45 : 1, y: 0, scale: pressed ? 0.97 : 1 }}
-              transition={{ ...springSoft, delay: busy ? 0 : i * 0.05 }}
-              whileTap={{ scale: pressScale }}
-              disabled={!!busy}
-              onClick={() => start(p)}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 10,
-                textAlign: "left",
-                padding: "14px 16px",
-                background: "var(--surface)",
-                borderRadius: "var(--radius)",
-                boxShadow: "var(--shadow)",
-              }}
-            >
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 16, fontWeight: 600, color: "var(--ink)" }}>
-                  {p.symbol}
-                </div>
-                <div style={{ fontSize: 13, color: "var(--ink-2)", marginTop: 3 }}>
-                  {p.side} · {p.qty}
-                  {p.expiry ? ` · ${p.expiry}` : ""}
-                </div>
-              </div>
-              {pressed ? (
-                <motion.span
-                  animate={{ opacity: [0.4, 1, 0.4] }}
-                  transition={{ duration: 1, repeat: Infinity, ease: "easeInOut" }}
-                  style={{ fontSize: 13, color: "var(--ink-2)", flexShrink: 0 }}
+            {/* Chosen → state the trade inline, right under the row. */}
+            <AnimatePresence>
+              {chosen === r.symbol && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={springSoft}
+                  style={{ overflow: "hidden" }}
                 >
-                  starting…
-                </motion.span>
-              ) : (
-                p.pnl !== undefined && (
-                  <span
-                    className="mono"
+                  <div
                     style={{
-                      fontSize: 15,
-                      fontWeight: 600,
-                      color: p.pnl >= 0 ? "var(--buy)" : "var(--sell)",
-                      flexShrink: 0,
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 10,
+                      padding: "12px 2px 6px",
                     }}
                   >
-                    {fmtPnl(p.pnl)}
-                  </span>
-                )
-              )}
-            </motion.button>
-          );
-        })}
-      </div>
-
-      {/* Secondary path: manual entry */}
-      <div style={{ marginTop: 22 }}>
-        <motion.button
-          whileTap={{ scale: pressScale }}
-          transition={spring}
-          onClick={() => {
-            tapHaptic();
-            setManualOpen((v) => !v);
-          }}
-          style={{ fontSize: 13, fontWeight: 600, color: "var(--ink-2)", padding: "6px 2px" }}
-        >
-          {manualOpen ? "Never mind" : "Tell it about this trade"}
-        </motion.button>
-
-        <AnimatePresence initial={false}>
-          {manualOpen && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: "auto", opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={springSoft}
-              style={{ overflow: "hidden" }}
-            >
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: 10,
-                  padding: "12px 2px 4px",
-                }}
-              >
-                <input
-                  value={mSymbol}
-                  onChange={(e) => setMSymbol(e.target.value)}
-                  placeholder="Symbol, e.g. NIFTY 24700 CE"
-                  style={inputStyle}
-                />
-                {/* long / short segmented */}
-                <div
-                  style={{
-                    display: "flex",
-                    background: "var(--surface-2)",
-                    borderRadius: "var(--radius-sm)",
-                    padding: 3,
-                    gap: 3,
-                  }}
-                >
-                  {(["long", "short"] as const).map((s) => (
+                    <div style={{ display: "flex", gap: 8 }}>
+                      {(["long", "short"] as const).map((s) => (
+                        <motion.button
+                          key={s}
+                          whileTap={{ scale: pressScale }}
+                          transition={spring}
+                          onClick={() => setMSide(s)}
+                          style={{
+                            flex: 1,
+                            padding: "11px",
+                            borderRadius: "var(--radius-sm)",
+                            fontSize: 15,
+                            fontWeight: 600,
+                            background: mSide === s ? "var(--brand)" : "var(--surface)",
+                            color: mSide === s ? "var(--brand-ink)" : "var(--ink-2)",
+                            boxShadow: mSide === s ? "none" : "var(--shadow)",
+                          }}
+                        >
+                          {s}
+                        </motion.button>
+                      ))}
+                    </div>
+                    <div style={{ display: "flex", gap: 8 }}>
+                      <input
+                        value={mQty}
+                        onChange={(e) => setMQty(e.target.value)}
+                        inputMode="numeric"
+                        placeholder="Qty"
+                        style={{ ...inputStyle, flex: 1 }}
+                      />
+                      <input
+                        value={mEntry}
+                        onChange={(e) => setMEntry(e.target.value)}
+                        inputMode="decimal"
+                        placeholder="Entry price"
+                        style={{ ...inputStyle, flex: 1.4 }}
+                      />
+                    </div>
+                    <input
+                      value={mExpiry}
+                      onChange={(e) => setMExpiry(e.target.value)}
+                      placeholder="Expiry (freeform is fine)"
+                      style={inputStyle}
+                    />
                     <motion.button
-                      key={s}
-                      whileTap={{ scale: pressScale }}
+                      whileTap={detailsValid && !busy ? { scale: pressScale } : undefined}
                       transition={spring}
-                      onClick={() => {
-                        tapHaptic();
-                        setMSide(s);
-                      }}
+                      disabled={!detailsValid || busy}
+                      animate={{ opacity: detailsValid && !busy ? 1 : 0.45 }}
+                      onClick={() =>
+                        start({
+                          symbol: r.symbol,
+                          side: mSide,
+                          qty: Number(mQty),
+                          entryPrice: Number(mEntry),
+                          expiry: mExpiry.trim() || undefined,
+                        })
+                      }
                       style={{
-                        flex: 1,
-                        fontSize: 13,
+                        padding: "13px",
+                        borderRadius: "var(--radius-sm)",
+                        background: "var(--brand)",
+                        color: "var(--brand-ink)",
+                        fontSize: 15,
                         fontWeight: 600,
-                        padding: "9px 0",
-                        borderRadius: 8,
-                        color: mSide === s ? "var(--ink)" : "var(--ink-2)",
-                        background: mSide === s ? "var(--surface)" : "transparent",
-                        boxShadow: mSide === s ? "var(--shadow)" : "none",
                       }}
                     >
-                      {s}
+                      {busy ? "Starting…" : "Watch this"}
                     </motion.button>
-                  ))}
-                </div>
-                <div style={{ display: "flex", gap: 10 }}>
-                  <input
-                    value={mQty}
-                    onChange={(e) => setMQty(e.target.value)}
-                    placeholder="Qty"
-                    inputMode="numeric"
-                    style={inputStyle}
-                  />
-                  <input
-                    value={mEntry}
-                    onChange={(e) => setMEntry(e.target.value)}
-                    placeholder="Entry price"
-                    inputMode="decimal"
-                    style={inputStyle}
-                  />
-                </div>
-                <input
-                  value={mExpiry}
-                  onChange={(e) => setMExpiry(e.target.value)}
-                  placeholder="Expiry (freeform is fine)"
-                  style={inputStyle}
-                />
-                <motion.button
-                  whileTap={manualValid ? { scale: pressScale } : undefined}
-                  transition={spring}
-                  disabled={!manualValid || !!busy}
-                  onClick={() =>
-                    start({
-                      symbol: mSymbol.trim(),
-                      side: mSide,
-                      qty: Number(mQty),
-                      entryPrice: Number(mEntry),
-                      expiry: mExpiry.trim() || undefined,
-                    })
-                  }
-                  animate={{ opacity: manualValid && !busy ? 1 : 0.45 }}
-                  style={{
-                    fontSize: 15,
-                    fontWeight: 700,
-                    padding: "13px 0",
-                    borderRadius: "var(--radius-sm)",
-                    background: "var(--surface)",
-                    boxShadow: "var(--shadow)",
-                    color: "var(--ink)",
-                  }}
-                >
-                  {busy === mSymbol.trim() ? "Starting…" : "Watch this trade"}
-                </motion.button>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        ))}
       </div>
     </Screen>
   );

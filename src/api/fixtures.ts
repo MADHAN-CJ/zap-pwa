@@ -108,7 +108,7 @@ const INSTRUMENTS: { symbol: string; name: string }[] = [
 export async function fxSearchInstruments(q: string) {
   await delay(200);
   const needle = q.trim().toLowerCase();
-  if (!needle) return [];
+  if (!needle) return INSTRUMENTS; // browse: the default market list
   return INSTRUMENTS.filter(
     (i) => i.symbol.toLowerCase().includes(needle) || i.name.toLowerCase().includes(needle)
   ).slice(0, 8);
