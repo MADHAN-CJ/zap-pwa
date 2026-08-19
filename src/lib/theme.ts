@@ -25,7 +25,7 @@ export function applyTheme() {
     (mode === "system" && matchMedia("(prefers-color-scheme: dark)").matches);
   document
     .querySelector('meta[name="theme-color"]')
-    ?.setAttribute("content", dark ? "#0b0f0d" : "#f7f8f7");
+    ?.setAttribute("content", dark ? "#222327" : "#fafafb");
 }
 
 matchMedia("(prefers-color-scheme: dark)").addEventListener("change", applyTheme);

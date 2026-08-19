@@ -6,13 +6,16 @@
 
 :root {
   /* -- Light mode (default) -- */
-  --bg: #f7f8f7;            /* app canvas, warm off-white */
-  --surface: #ffffff;       /* cards, sheets */
-  --surface-2: #eef1ef;     /* recessed / secondary surfaces */
-  --ink: #101613;           /* primary text, green-tinted near-black */
-  --ink-2: #5b665f;         /* secondary text */
-  --ink-3: #9aa49e;         /* tertiary / placeholder */
-  --line: #e3e7e4;          /* hairline borders */
+  /* Neutral system per beautifului.dev: cool grays, near-black ink,
+     hairline lines. Brand + status colors remain ours. */
+  --bg: oklch(98.5% 0.001 286.376);      /* page */
+  --surface: #ffffff;                     /* cards, sheets */
+  --surface-2: oklch(96.1% 0.001 286.375);/* recessed fields */
+  --ink: oklch(24.7% 0.006 258.361);
+  --ink-2: oklch(50.6% 0.01 264.477);
+  --ink-3: oklch(69.5% 0.009 264.505);
+  --line: oklch(94.6% 0.003 264.542);
+  --line-strong: oklch(91.2% 0.005 258.326);
 
   /* Brand — rich forest green, reserved for primary actions */
   --brand: #0d5c3f;
@@ -30,14 +33,21 @@
   --buy: #0d6e46;
   --sell: #b3401e;
 
-  --radius: 16px;
-  --radius-sm: 10px;
+  --radius: 12px;
+  --radius-sm: 8px;
+  --radius-chip: 6px;
   --radius-full: 999px;
 
   --font: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, monospace;
 
-  --shadow: 0 1px 2px rgba(16, 22, 19, 0.04), 0 8px 24px rgba(16, 22, 19, 0.06);
+  /* Hairline ring + layered soft stack — the beautifului card treatment. */
+  --shadow: 0 0 0 1px var(--line), 0 18px 47px rgba(0,0,0,0.03),
+    0 7.5px 19px rgba(0,0,0,0.02), 0 4px 10.5px rgba(0,0,0,0.02),
+    0 2.3px 5.8px rgba(0,0,0,0.012), 0 1.2px 3.1px rgba(0,0,0,0.012);
+  --shadow-raised: 0 0 0 1px var(--line), 0 17.5px 23.4px rgba(0,0,0,0.04),
+    0 9.4px 12.5px rgba(0,0,0,0.03), 0 5.3px 7px rgba(0,0,0,0.02),
+    0 2.8px 3.7px rgba(0,0,0,0.012);
 
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
@@ -46,13 +56,14 @@
 /* -- Dark mode: system preference (unless explicitly light) -- */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #0b0f0d;
-    --surface: #141a16;
-    --surface-2: #1c231f;
-    --ink: #eef2ef;
-    --ink-2: #99a49d;
-    --ink-3: #5d6862;
-    --line: #232b26;
+    --bg: oklch(20.9% 0.004 264.477); /* soft graphite, not pitch black */
+    --surface: oklch(26% 0.006 271.191);
+    --surface-2: oklch(29.3% 0.006 271.223);
+    --ink: oklch(96.4% 0.002 247.839);
+    --ink-2: oklch(73.1% 0.008 260.731);
+    --ink-3: oklch(54.1% 0.01 264.484);
+    --line: oklch(30.8% 0.006 258.354);
+    --line-strong: oklch(35.6% 0.007 264.474);
 
     --brand: #2fbf80;        /* brighter green for contrast on black */
     --brand-ink: #06130c;
@@ -68,19 +79,22 @@
     --buy: #2fbf80;
     --sell: #e5764d;
 
-    --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.35);
+    --shadow: 0 0 0 1px rgba(255,255,255,0.11), 0 1px 2px rgba(0,0,0,0.2),
+      0 2px 6px rgba(0,0,0,0.2);
+    --shadow-raised: 0 0 0 1px rgba(255,255,255,0.13), 0 2px 10px rgba(0,0,0,0.22);
   }
 }
 
 /* -- Dark mode: explicit user choice -- */
 :root[data-theme="dark"] {
-  --bg: #0b0f0d;
-  --surface: #141a16;
-  --surface-2: #1c231f;
-  --ink: #eef2ef;
-  --ink-2: #99a49d;
-  --ink-3: #5d6862;
-  --line: #232b26;
+  --bg: oklch(20.9% 0.004 264.477); /* soft graphite, not pitch black */
+  --surface: oklch(26% 0.006 271.191);
+  --surface-2: oklch(29.3% 0.006 271.223);
+  --ink: oklch(96.4% 0.002 247.839);
+  --ink-2: oklch(73.1% 0.008 260.731);
+  --ink-3: oklch(54.1% 0.01 264.484);
+  --line: oklch(30.8% 0.006 258.354);
+  --line-strong: oklch(35.6% 0.007 264.474);
 
   --brand: #2fbf80;
   --brand-ink: #06130c;
@@ -96,7 +110,9 @@
   --buy: #2fbf80;
   --sell: #e5764d;
 
-  --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.35);
+  --shadow: 0 0 0 1px rgba(255,255,255,0.11), 0 1px 2px rgba(0,0,0,0.2),
+    0 2px 6px rgba(0,0,0,0.2);
+  --shadow-raised: 0 0 0 1px rgba(255,255,255,0.13), 0 2px 10px rgba(0,0,0,0.22);
 }
 
 /* ============================================================
