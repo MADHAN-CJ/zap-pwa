@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Navigate, useNavigate, useParams } from "react-router-dom";
 import { motion } from "motion/react";
+import { IconBolt, IconCircleHalf2 } from "@tabler/icons-react";
 import { Screen } from "@/components/Screen";
 import { PromptBar } from "@/components/PromptBar";
 import { StatusPill } from "@/components/StatusPill";
@@ -208,8 +209,18 @@ export default function WatchDetail() {
                   }}
                 >
                   {item.label}{" "}
-                  <span style={{ fontSize: 11, color: "var(--ink-3)", whiteSpace: "nowrap" }}>
-                    {item.kind === "hard" ? "⚡" : "◐"}
+                  <span
+                    style={{
+                      display: "inline-flex",
+                      verticalAlign: "-2px",
+                      color: "var(--ink-3)",
+                    }}
+                  >
+                    {item.kind === "hard" ? (
+                      <IconBolt size={13} stroke={2.2} />
+                    ) : (
+                      <IconCircleHalf2 size={13} stroke={2.2} />
+                    )}
                   </span>
                 </span>
                 <span
