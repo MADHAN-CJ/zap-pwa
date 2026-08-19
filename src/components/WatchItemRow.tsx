@@ -7,7 +7,7 @@ export function KindTag({ kind }: { kind: WatchItem["kind"] }) {
   const hard = kind === "hard";
   return (
     <span
-      title={hard ? "Hard line — checked tick-by-tick" : "Signal — checked on a 30-min pass"}
+      title={hard ? "Hard line: checked tick-by-tick" : "Signal: checked on a 30-min pass"}
       style={{
         display: "inline-flex",
         alignItems: "center",

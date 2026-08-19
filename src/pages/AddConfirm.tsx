@@ -49,7 +49,7 @@ export default function AddConfirm() {
         // Rows stagger in at index*0.05 with springSoft; enable once the 5th settles.
         setTimeout(() => live && setReady(true), 1100);
       } catch {
-        if (live) setError("Couldn't build the watch-list — go back and try again.");
+        if (live) setError("Couldn't build the watch-list. Go back and try again.");
       }
     })();
     return () => {
@@ -99,7 +99,7 @@ export default function AddConfirm() {
       nav("/watch"); // Home is the hub — never the detail screen (PRD §5)
     } catch {
       setStarting(false);
-      setError("Couldn't start watching — try again.");
+      setError("Couldn't start watching. Try again.");
     }
   }
 

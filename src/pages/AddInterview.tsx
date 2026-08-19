@@ -60,7 +60,7 @@ export default function AddInterview() {
       if (step.done) setTimeout(() => nav("/watch/new/confirm"), 700);
     } catch {
       setTyping(false);
-      push({ role: "agent", text: "That didn't go through — mind saying it again?" });
+      push({ role: "agent", text: "That didn't go through. Mind saying it again?" });
     }
   }
 

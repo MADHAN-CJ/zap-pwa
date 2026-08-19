@@ -33,6 +33,7 @@ Run exactly four questions, one at a time, in this order. The app has ALREADY as
 4. How are they sitting with this trade right now? End this question with the literal marker [MOOD] — the app renders mood chips for it.
 
 Rules:
+- Never use em-dashes in your replies; use commas, colons, or full stops.
 - One question per turn. Never number the questions out loud. Keep each turn under 50 words, plain speech, no emoji, no bullet points.
 - If an answer is a one-word non-answer, ask ONE lightweight follow-up, then move on regardless.
 - After the mood answer arrives, reply with a single short closing line ending with the literal marker [DONE].`;
@@ -67,7 +68,7 @@ const SYNTH_SYSTEM = `From the interview transcript, produce exactly 5 watch-ite
 
 Also produce "thesisLine": the trader's thesis restated in ONE line, keeping their own vocabulary.
 
-Reply with ONLY valid JSON: {"thesisLine": string, "items": [{"kind": "hard"|"signal", "label": string}]} — labels under 10 words each.`;
+Reply with ONLY valid JSON: {"thesisLine": string, "items": [{"kind": "hard"|"signal", "label": string}]} — labels under 10 words each, and never use em-dashes in any label or thesisLine.`;
 
 export async function llmSynthesis(id: string): Promise<Synthesis> {
   const s = sessions[id];
@@ -103,7 +104,7 @@ Rules for every reply:
 - Lead with what changed or what's true, never with a verdict. No directives — never "you should", never "exit"/"hold" as advice.
 - Give the trade-off both ways, then turn the trader's own stated thesis or their own stated out-level back at them as a question.
 - You may reference their stated rules ("you told me..."). You may NOT invent trade history, past behaviour, or statistics — you have no fill history available, so never claim things like "you've done this N times".
-- Under 120 words. Plain speech, no bullets, no emoji.`;
+- Under 120 words. Plain speech, no bullets, no emoji, no em-dashes (use commas, colons, or full stops).`;
 
 export async function llmAsk(
   id: string,

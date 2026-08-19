@@ -58,7 +58,7 @@ export default function AddPick() {
       addFlow.setLastStep(step);
       nav("/watch/new/interview");
     } catch {
-      setError("Couldn't start — try again.");
+      setError("Couldn't start. Try again.");
       setBusy(null);
     }
   }
@@ -69,7 +69,7 @@ export default function AddPick() {
     <Screen back="/watch" tag={positions ? `${positions.length} open` : "…"}>
       <p style={{ fontSize: 17, lineHeight: 1.4, color: "var(--ink)", padding: "4px 0 18px" }}>
         Which one is on your mind?{" "}
-        <span style={{ color: "var(--ink-2)" }}>Start with one — add the others later.</span>
+        <span style={{ color: "var(--ink-2)" }}>Start with one. Add the others later.</span>
       </p>
 
       {error && (
@@ -174,7 +174,7 @@ export default function AddPick() {
                 <input
                   value={mSymbol}
                   onChange={(e) => setMSymbol(e.target.value)}
-                  placeholder="Symbol — e.g. NIFTY 24700 CE"
+                  placeholder="Symbol, e.g. NIFTY 24700 CE"
                   style={inputStyle}
                 />
                 {/* long / short segmented */}
@@ -230,7 +230,7 @@ export default function AddPick() {
                 <input
                   value={mExpiry}
                   onChange={(e) => setMExpiry(e.target.value)}
-                  placeholder="Expiry — freeform is fine"
+                  placeholder="Expiry (freeform is fine)"
                   style={inputStyle}
                 />
                 <motion.button

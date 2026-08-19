@@ -12,7 +12,7 @@ import type { AskTurn, WatchStatus } from "@/types";
 
 const SEED: AskTurn = {
   role: "agent",
-  text: "Ask me anything about this one. I'll give you the trade-offs — the call stays yours.",
+  text: "Ask me anything about this one. I'll give you the trade-offs. The call stays yours.",
 };
 
 /** /watch/:id/ask — conversational drill-down. Trade-offs, not answers. */
@@ -115,7 +115,7 @@ export default function WatchAsk() {
                   padding: "8px 12px",
                 }}
               >
-                From your own record — {t.historyNote}
+                From your own record: {t.historyNote}
               </motion.div>
             )}
           </div>

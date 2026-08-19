@@ -39,7 +39,7 @@ let watches: Watch[] = [
     lastUpdateText: "2 of 5 flipped · updated 1:35p",
     createdAt: "2026-08-17T09:20:00+05:30",
     changeSummary:
-      "Two of your five moved inside the last hour. Price closed above 24,500 — the hard line you set — and the premium has run from ₹186 to ₹241. The divergence you built this on hasn't resolved yet, and writers are still holding the 24,700 wall. What's changed is price and premium; what hasn't is the structure you originally read.",
+      "Two of your five moved inside the last hour. Price closed above 24,500, the hard line you set, and the premium has run from ₹186 to ₹241. The divergence you built this on hasn't resolved yet, and writers are still holding the 24,700 wall. What's changed is price and premium; what hasn't is the structure you originally read.",
     priceLine: "short 75 · ₹186 → ₹241 · bending",
   },
   {
@@ -75,7 +75,7 @@ let watchItems: Record<string, WatchItem[]> = {
 
 let feeds: Record<string, FeedEntry[]> = {
   w1: [
-    { id: "f5", watchId: "w1", timestamp: "1:35p", weight: "real", text: "Price closed the hour above 24,500 — your hard line. Premium ₹241 against your ₹186 entry." },
+    { id: "f5", watchId: "w1", timestamp: "1:35p", weight: "real", text: "Price closed the hour above 24,500, your hard line. Premium ₹241 against your ₹186 entry." },
     { id: "f4", watchId: "w1", timestamp: "1:10p", weight: "real", text: "OI is starting to build at 24,900 while 24,700 adds nothing. That migration you called out is underway." },
     { id: "f3", watchId: "w1", timestamp: "12:30p", weight: "quiet", text: "Quiet. Spot 24,462." },
     { id: "f2", watchId: "w1", timestamp: "12:00p", weight: "quiet", text: "Nothing moved against you." },
@@ -99,7 +99,7 @@ const drafts: Record<string, Draft> = {};
 let nextId = 10;
 
 const Q2_PUSHBACK = (reason: string) =>
-  `So the trade is: ${reason.length > 120 ? reason.slice(0, 117) + "…" : reason} Fair. Now flip it — what would tell you that read is *failing*? Not "price goes against me," but the thing that breaks your actual reason.`;
+  `So the trade is: ${reason.length > 120 ? reason.slice(0, 117) + "…" : reason} Fair. Now flip it: what would tell you that read is *failing*? Not "price goes against me," but the thing that breaks your actual reason.`;
 
 export async function fxCreateWatch(position: PositionRef): Promise<{ id: string; step: InterviewStep }> {
   await delay();
@@ -109,8 +109,8 @@ export async function fxCreateWatch(position: PositionRef): Promise<{ id: string
     id,
     step: {
       agentMessages: [
-        `${position.symbol} — ${position.side} ${position.qty}. Got it.`,
-        "Why'd you take this one? In your own words — what's the read?",
+        `${position.symbol}, ${position.side} ${position.qty}. Got it.`,
+        "Why'd you take this one? In your own words, what's the read?",
       ],
       done: false,
     },
@@ -120,14 +120,14 @@ export async function fxCreateWatch(position: PositionRef): Promise<{ id: string
 export async function fxInterviewTurn(id: string, answer: string): Promise<InterviewStep> {
   await delay(500);
   const d = drafts[id];
-  if (!d) return { agentMessages: ["Hmm, lost the thread — go back and start again."], done: true };
+  if (!d) return { agentMessages: ["Hmm, lost the thread. Go back and start again."], done: true };
   d.answers.push(answer);
 
   // Lightweight one-word follow-up, once per question (PRD edge case).
   if (answer.trim().split(/\s+/).length < 3 && !d.answers[d.answers.length - 2]?.startsWith("__retry")) {
     d.answers[d.answers.length - 1] = `__retry:${answer}`;
     return {
-      agentMessages: ["Give me a little more than that — I can only watch what you actually tell me."],
+      agentMessages: ["Give me a little more than that. I can only watch what you actually tell me."],
       done: false,
       expectsMood: d.step === 3,
     };
@@ -180,7 +180,7 @@ export async function fxStart(id: string): Promise<Watch> {
   const d = drafts[id];
   const w: Watch = {
     id,
-    symbol: d?.position.symbol ?? "—",
+    symbol: d?.position.symbol ?? "?",
     side: d?.position.side ?? "long",
     qty: d?.position.qty ?? 0,
     entryPrice: d?.position.entryPrice ?? 0,
@@ -227,14 +227,14 @@ export async function fxAsk(id: string, _question: string): Promise<AskTurn> {
     return {
       role: "agent",
       text:
-        "Here's the trade-off as I see it. Exiting here costs you about ₹4,100 and closes the book — no more decisions, no gap risk into expiry. Holding keeps your original read alive: the divergence hasn't resolved and the 24,700 wall is still standing, which is the structure you said this trade rests on. But your own hard line — a close above 24,500 — is gone, and you set that line when you were calmer than you are now. You told me you'd respect it regardless of what I say. Is this the exception, or is this exactly the moment you made that rule for?",
+        "Here's the trade-off as I see it. Exiting here costs you about ₹4,100 and closes the book: no more decisions, no gap risk into expiry. Holding keeps your original read alive: the divergence hasn't resolved and the 24,700 wall is still standing, which is the structure you said this trade rests on. But your own hard line, a close above 24,500, is gone, and you set that line when you were calmer than you are now. You told me you'd respect it regardless of what I say. Is this the exception, or is this exactly the moment you made that rule for?",
       historyNote:
         "For what it's worth: you've held through a broken hard line 3 times since May. All three cost more than the first exit would have. That's the record, not a verdict.",
     };
   }
   return {
     role: "agent",
-    text: `On ${w?.symbol ?? "this one"}: nothing in your five has moved, so the honest answer is that any urge to act right now is coming from you, not the position. Your thesis — ${w?.thesis ?? "as stated"} — is intact. What specifically feels different since you set it?`,
+    text: `On ${w?.symbol ?? "this one"}: nothing in your five has moved, so the honest answer is that any urge to act right now is coming from you, not the position. Your thesis, ${w?.thesis ?? "as stated"}, is intact. What specifically feels different since you set it?`,
   };
 }
 
@@ -247,8 +247,8 @@ export async function fxDigest(_date?: string): Promise<DigestEntry[]> {
       date: "19 Aug",
       headline: "Bent, didn't break",
       paragraph:
-        "The afternoon went against you: a close above 24,500 took out your hard line, and the premium ran to ₹241. But the read you actually built this trade on — the divergence, the writers at 24,700 — is still standing, which is why it's bending and not gone. You asked to be told when price and thesis disagree: today they did.",
-      prompts: ["Your out-level was 24,500 on a close. It closed there.", "Expiry is tomorrow — theta is now doing most of the arguing."],
+        "The afternoon went against you: a close above 24,500 took out your hard line, and the premium ran to ₹241. But the read you actually built this trade on, the divergence and the writers at 24,700, is still standing, which is why it's bending and not gone. You asked to be told when price and thesis disagree: today they did.",
+      prompts: ["Your out-level was 24,500 on a close. It closed there.", "Expiry is tomorrow; theta is now doing most of the arguing."],
     },
     {
       watchId: "w2",
