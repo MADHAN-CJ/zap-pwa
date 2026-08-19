@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Navigate, useLocation, useNavigate, useParams } from "react-router-dom";
+import { Navigate, useNavigate, useParams } from "react-router-dom";
 import { motion, AnimatePresence } from "motion/react";
 import { Screen } from "@/components/Screen";
 import { PromptBar } from "@/components/PromptBar";
@@ -15,6 +15,20 @@ const SEED: AskTurn = {
   text: "Ask me anything about this one. I'll give you the trade-offs. The call stays yours.",
 };
 
+// Chats are retained per watch, client-side for now (localStorage); the
+// backend should own this once /watches/:id/ask persists conversations.
+const storeKey = (id: string) => `zap-ask-${id}`;
+
+function loadTurns(id: string): AskTurn[] {
+  try {
+    const raw = localStorage.getItem(storeKey(id));
+    const parsed = raw ? (JSON.parse(raw) as AskTurn[]) : null;
+    return parsed?.length ? parsed : [SEED];
+  } catch {
+    return [SEED];
+  }
+}
+
 /** /watch/:id/ask — conversational drill-down. Trade-offs, not answers. */
 export default function WatchAsk() {
   const { id = "" } = useParams();
@@ -22,7 +36,7 @@ export default function WatchAsk() {
   const [status, setStatus] = useState<WatchStatus | null>(null);
   const [symbol, setSymbol] = useState("");
   const [missing, setMissing] = useState(false);
-  const [turns, setTurns] = useState<AskTurn[]>([SEED]);
+  const [turns, setTurns] = useState<AskTurn[]>(() => loadTurns(id));
   const [input, setInput] = useState("");
   const [typing, setTyping] = useState(false);
   const [failed, setFailed] = useState(false);
@@ -43,18 +57,20 @@ export default function WatchAsk() {
     };
   }, [id]);
 
+  // Retain the thread.
+  useEffect(() => {
+    try {
+      localStorage.setItem(storeKey(id), JSON.stringify(turns));
+    } catch {
+      /* storage full/unavailable — chat still works, just not retained */
+    }
+  }, [id, turns]);
+
   // Auto-scroll to newest, smooth.
   useEffect(() => {
     const el = threadRef.current;
     if (el) el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
   }, [turns, typing]);
-
-  // A question handed over from the Flipped screen's prompt bar.
-  const handoff = (useLocation().state as { ask?: string } | null)?.ask;
-  useEffect(() => {
-    if (handoff && turns.length === 1 && !typing) send(handoff);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [handoff]);
 
   if (missing) return <Navigate to="/watch" replace />;
 

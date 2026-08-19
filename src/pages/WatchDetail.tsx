@@ -1,9 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { Navigate, useNavigate, useParams } from "react-router-dom";
 import { motion } from "motion/react";
-import { IconBolt, IconCircleHalf2 } from "@tabler/icons-react";
+import { IconBolt, IconCircleHalf2, IconMessageCircle } from "@tabler/icons-react";
 import { Screen } from "@/components/Screen";
-import { PromptBar } from "@/components/PromptBar";
 import { StatusPill } from "@/components/StatusPill";
 import { getFeed, getWatch } from "@/api/watch";
 import { springSoft } from "@/lib/motion";
@@ -18,7 +17,6 @@ export default function WatchDetail() {
   const nav = useNavigate();
   const [data, setData] = useState<Data | null>(null);
   const [state, setState] = useState<"loading" | "error" | "missing" | "ready">("loading");
-  const [ask, setAsk] = useState("");
 
   const load = useCallback(async () => {
     setState("loading");
@@ -78,24 +76,7 @@ export default function WatchDetail() {
   if (watch.status === "flipped") {
     const gone = items.filter((i) => i.state === "gone").length;
     return (
-      <Screen back="/watch" padBottom={false}>
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            height: "calc(100dvh - var(--safe-top) - var(--safe-bottom) - 66px)",
-            minHeight: 0,
-          }}
-        >
-        <div
-          style={{
-            flex: 1,
-            minHeight: 0,
-            overflowY: "auto",
-            WebkitOverflowScrolling: "touch",
-            paddingBottom: 12,
-          }}
-        >
+      <Screen back="/watch">
         {/* Hero: what am I looking at, and how bad is it — before any prose. */}
         <div style={{ padding: "0 2px 18px" }}>
           <h2 style={{ fontSize: 22, fontWeight: 700, letterSpacing: -0.4, lineHeight: 1.2 }}>
@@ -253,22 +234,32 @@ export default function WatchDetail() {
           })}
         </motion.div>
 
-        </div>
-
-        {/* The chat bar, where it usually lives: pinned at the bottom.
-            Typing here hands the question straight into the Ask chat. */}
-        <div style={{ padding: "10px 0 8px" }}>
-          <PromptBar
-            value={ask}
-            onChange={setAsk}
-            onSend={() => {
-              tapHaptic();
-              nav(`/watch/${id}/ask`, { state: { ask: ask.trim() } });
-            }}
-            placeholder="Ask it anything about the position…"
-          />
-        </div>
-        </div>
+        {/* Entry to the Ask chat — a quiet button, not an input. */}
+        <motion.button
+          whileTap={{ scale: 0.97 }}
+          transition={springSoft}
+          onClick={() => {
+            tapHaptic();
+            nav(`/watch/${id}/ask`);
+          }}
+          style={{
+            marginTop: 22,
+            alignSelf: "center",
+            display: "flex",
+            alignItems: "center",
+            gap: 7,
+            fontSize: 13,
+            fontWeight: 600,
+            color: "var(--ink-2)",
+            padding: "10px 16px",
+            borderRadius: "var(--radius-full)",
+            background: "var(--surface)",
+            boxShadow: "var(--shadow)",
+          }}
+        >
+          <IconMessageCircle size={15} stroke={2.2} />
+          Ask about this position
+        </motion.button>
       </Screen>
     );
   }
@@ -277,12 +268,8 @@ export default function WatchDetail() {
   return (
     <Screen
       back="/watch"
-      tag={
-        <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
-          {watch.symbol}
-          <StatusPill status={watch.status} size="sm" />
-        </span>
-      }
+      title={watch.symbol}
+      tag={<StatusPill status={watch.status} size="sm" />}
     >
       {/* Timeline: continuous rail, a node per entry, time on the node. */}
       <div style={{ display: "flex", flexDirection: "column", paddingTop: 4 }}>
@@ -347,7 +334,7 @@ export default function WatchDetail() {
                     {e.text}
                   </div>
                 ) : (
-                  <div style={{ fontSize: 15, lineHeight: 1.5, color: "var(--ink-3)" }}>
+                  <div style={{ fontSize: 15, lineHeight: 1.5, color: "var(--ink-2)" }}>
                     {e.text}
                   </div>
                 )}
