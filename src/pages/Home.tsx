@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { motion } from "motion/react";
 import { useNavigate } from "react-router-dom";
-import { IconPlus } from "@tabler/icons-react";
+import { IconClock, IconPlus } from "@tabler/icons-react";
 import { Screen } from "@/components/Screen";
 import { StatusPill } from "@/components/StatusPill";
 import { listWatches } from "@/api/watch";
@@ -73,7 +73,7 @@ export default function Home() {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          gap: 8,
+          gap: 7,
           width: "100%",
           padding: "16px 20px",
           borderRadius: "var(--radius)",
@@ -155,7 +155,7 @@ export default function Home() {
                       display: "flex",
                       flexDirection: "column",
                       alignItems: "stretch",
-                      gap: 8,
+                      gap: 7,
                       textAlign: "left",
                       background: "var(--surface)",
                       borderRadius: "var(--radius)",
@@ -185,23 +185,26 @@ export default function Home() {
                       </span>
                       <StatusPill status={w.status} size="sm" />
                     </div>
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "baseline",
-                        justifyContent: "space-between",
-                        gap: 12,
-                      }}
-                    >
-                      <span className="mono" style={{ fontSize: 13, color: "var(--ink)" }}>
+                    {/* One fact per line — details and meta never share a row. */}
+                    {(w.side || w.expiry) && (
+                      <span className="mono" style={{ fontSize: 13, color: "var(--ink-2)" }}>
                         {w.side
                           ? `${w.side} ${w.qty} · ₹${w.entryPrice?.toLocaleString("en-IN")}${w.expiry ? ` · ${w.expiry}` : ""}`
-                          : w.expiry ?? ""}
+                          : w.expiry}
                       </span>
-                      <span style={{ fontSize: 13, color: "var(--ink-3)", whiteSpace: "nowrap" }}>
-                        {w.lastUpdateText}
-                      </span>
-                    </div>
+                    )}
+                    <span
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 5,
+                        fontSize: 13,
+                        color: "var(--ink-3)",
+                      }}
+                    >
+                      <IconClock size={13} stroke={2} style={{ flexShrink: 0 }} />
+                      {w.lastUpdateText}
+                    </span>
                   </motion.button>
                 ))}
           </div>
