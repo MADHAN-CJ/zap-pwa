@@ -1,10 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { Navigate, useNavigate, useParams } from "react-router-dom";
 import { motion } from "motion/react";
-import { BorderBeam } from "border-beam";
 import { Screen } from "@/components/Screen";
 import { StatusPill } from "@/components/StatusPill";
-import { WatchItemRow } from "@/components/WatchItemRow";
 import { getFeed, getWatch } from "@/api/watch";
 import { springSoft, spring, pressScale } from "@/lib/motion";
 import { tapHaptic } from "@/lib/haptics";
@@ -94,15 +92,14 @@ export default function WatchDetail() {
             transition={springSoft}
             style={{ marginBottom: 20 }}
           >
-            <BorderBeam size="pulse-inner" colorVariant="sunset" theme="auto">
-              <div
-                style={{
-                  background: "var(--surface)",
-                  borderRadius: "var(--radius)",
-                  boxShadow: "var(--shadow)",
-                  padding: "16px 18px",
-                }}
-              >
+            <div
+              style={{
+                background: "var(--surface)",
+                borderRadius: "var(--radius)",
+                boxShadow: "var(--shadow)",
+                padding: "16px 18px",
+              }}
+            >
             <div
               style={{
                 display: "flex",
@@ -122,17 +119,90 @@ export default function WatchDetail() {
             <p style={{ fontSize: 15.5, lineHeight: 1.5, color: "var(--ink)" }}>
               {watch.changeSummary}
             </p>
-              </div>
-            </BorderBeam>
+            </div>
           </motion.div>
         )}
 
-        {/* All five — what's gone AND what still holds (PRD §5). */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-          {items.map((item, i) => (
-            <WatchItemRow key={item.id} item={item} showState index={i} />
-          ))}
-        </div>
+        {/* All five — what's gone AND what still holds (PRD §5).
+            One grouped record card, hairline dividers, no per-item boxes. */}
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ ...springSoft, delay: 0.08 }}
+          style={{
+            background: "var(--surface)",
+            borderRadius: "var(--radius)",
+            boxShadow: "var(--shadow)",
+            overflow: "hidden",
+          }}
+        >
+          {items.map((item, i) => {
+            const gone = item.state === "gone";
+            return (
+              <div
+                key={item.id}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 12,
+                  padding: "13px 16px",
+                  borderTop: i > 0 ? "1px solid var(--line)" : "none",
+                }}
+              >
+                <span
+                  style={{
+                    width: 8,
+                    height: 8,
+                    borderRadius: 999,
+                    flexShrink: 0,
+                    background: gone ? "var(--flipped)" : "transparent",
+                    border: gone ? "none" : "2px solid var(--holding)",
+                  }}
+                />
+                <span
+                  style={{
+                    flex: 1,
+                    minWidth: 0,
+                    fontSize: 14.5,
+                    lineHeight: 1.35,
+                    fontWeight: gone ? 600 : 400,
+                    color: gone ? "var(--flipped)" : "var(--ink)",
+                  }}
+                >
+                  {item.label}{" "}
+                  <span style={{ fontSize: 12, color: "var(--ink-3)", whiteSpace: "nowrap" }}>
+                    {item.kind === "hard" ? "⚡" : "◐"}
+                  </span>
+                </span>
+                <span
+                  style={{
+                    textAlign: "right",
+                    flexShrink: 0,
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "flex-end",
+                    gap: 2,
+                  }}
+                >
+                  <span
+                    style={{
+                      fontSize: 11.5,
+                      fontWeight: 600,
+                      color: gone ? "var(--flipped)" : "var(--holding)",
+                    }}
+                  >
+                    {gone ? "gone" : "holding"}
+                  </span>
+                  {item.lastCheckedAt && (
+                    <span className="mono" style={{ fontSize: 10.5, color: "var(--ink-3)" }}>
+                      {item.lastCheckedAt}
+                    </span>
+                  )}
+                </span>
+              </div>
+            );
+          })}
+        </motion.div>
 
         <motion.button
           whileTap={{ scale: pressScale }}
@@ -145,8 +215,8 @@ export default function WatchDetail() {
             marginTop: 24,
             padding: "14px 18px",
             borderRadius: "var(--radius-full)",
-            background: "var(--surface)",
-            boxShadow: "var(--shadow)",
+            background: "var(--surface-2)",
+            border: "1px solid var(--line-strong)",
             color: "var(--ink-3)",
             fontSize: 15,
             textAlign: "left",
@@ -169,45 +239,77 @@ export default function WatchDetail() {
         </span>
       }
     >
-      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-        {feed.map((e, i) => (
-          <motion.div
-            key={e.id}
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ ...springSoft, delay: i * 0.05 }}
-            style={
-              e.weight === "real"
-                ? {
-                    background: "var(--surface)",
-                    borderRadius: "var(--radius-sm)",
-                    boxShadow: "var(--shadow)",
-                    padding: "12px 14px",
-                  }
-                : { padding: "8px 14px" }
-            }
-          >
-            <div
-              className="mono"
-              style={{
-                fontSize: 11,
-                color: "var(--ink-3)",
-                marginBottom: e.weight === "real" ? 5 : 3,
-              }}
+      {/* Timeline: continuous rail, a node per entry, time on the node. */}
+      <div style={{ display: "flex", flexDirection: "column", paddingTop: 4 }}>
+        {feed.map((e, i) => {
+          const real = e.weight === "real";
+          const last = i === feed.length - 1;
+          return (
+            <motion.div
+              key={e.id}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ ...springSoft, delay: i * 0.05 }}
+              style={{ display: "flex", gap: 14 }}
             >
-              {e.timestamp}
-            </div>
-            <div
-              style={
-                e.weight === "real"
-                  ? { fontSize: 15, lineHeight: 1.45, color: "var(--ink)" }
-                  : { fontSize: 13, lineHeight: 1.4, color: "var(--ink-3)" }
-              }
-            >
-              {e.text}
-            </div>
-          </motion.div>
-        ))}
+              {/* Rail column */}
+              <div style={{ width: 12, position: "relative", flexShrink: 0 }}>
+                <span
+                  style={{
+                    position: "absolute",
+                    left: 5,
+                    top: i === 0 ? 8 : 0,
+                    bottom: last ? "auto" : 0,
+                    height: last ? 8 : undefined,
+                    width: 2,
+                    background: "var(--line-strong)",
+                  }}
+                />
+                <span
+                  style={{
+                    position: "absolute",
+                    left: real ? 1 : 2,
+                    top: real ? 3 : 4,
+                    width: real ? 10 : 8,
+                    height: real ? 10 : 8,
+                    borderRadius: 999,
+                    background: real ? "var(--bending)" : "var(--bg)",
+                    border: real ? "2px solid var(--bg)" : "2px solid var(--line-strong)",
+                    boxShadow: real ? "0 0 0 1px var(--bending)" : "none",
+                  }}
+                />
+              </div>
+              {/* Content */}
+              <div style={{ flex: 1, minWidth: 0, paddingBottom: last ? 0 : 20 }}>
+                <div
+                  className="mono"
+                  style={{ fontSize: 11, color: "var(--ink-3)", marginBottom: 5, marginTop: 1 }}
+                >
+                  {e.timestamp}
+                </div>
+                {real ? (
+                  <div
+                    style={{
+                      background: "var(--surface)",
+                      borderRadius: "var(--radius-sm)",
+                      boxShadow: "var(--shadow)",
+                      padding: "11px 13px",
+                      fontSize: 14.5,
+                      lineHeight: 1.5,
+                      color: "var(--ink)",
+                    }}
+                  >
+                    {e.text}
+                  </div>
+                ) : (
+                  <div style={{ fontSize: 13, lineHeight: 1.45, color: "var(--ink-3)" }}>
+                    {e.text}
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          );
+        })}
       </div>
 
       <p
