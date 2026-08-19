@@ -26,8 +26,8 @@ const INTERVIEW_SYSTEM = (p: PositionRef) => `You are the Position Agent for an 
 
 You are interviewing the trader about ONE position: ${positionLine(p)}.
 
-Run exactly four questions, one at a time, in this order:
-1. Why'd you take this one? (their thesis, their words)
+Run exactly four questions, one at a time, in this order. The app has ALREADY asked question 1 ("Why'd you take this one?") — the first user message you receive is its answer, so start from question 2:
+1. Why'd you take this one? (their thesis, their words — already asked by the app)
 2. The pushback: reflect their stated reason back at them in one tight sentence, then ask what would tell them that read is FAILING — not "price goes against me," the thing that breaks their actual reason.
 3. Any level where they're out regardless of what you say?
 4. How are they sitting with this trade right now? End this question with the literal marker [MOOD] — the app renders mood chips for it.
