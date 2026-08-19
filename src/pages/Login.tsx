@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "motion/react";
+import { IconBolt, IconChevronRight } from "@tabler/icons-react";
 import { Screen } from "@/components/Screen";
 import { requestOtp, verifyOtp } from "@/api/auth";
 import { MOCK } from "@/api/watch";
@@ -20,11 +21,22 @@ const fieldStyle: CSSProperties = {
   outline: "none",
 };
 
-/** /login — email → OTP. UI only on this branch; zap-api auth already
- *  exists (/auth/request-otp, /auth/verify-otp) — Madhan owns the backend. */
+// The three ways in. Broker connect happens after sign-in (existing Broker
+// flow, zap-api side); manual entry is the Add-position path.
+// TODO(open question, from the design doc): for traders whose broker isn't
+// listed, manual entry is the main road, not a fallback — should it be first?
+const PATHS = [
+  { key: "zerodha", label: "Connect Zerodha", avatar: "Z" },
+  { key: "dhan", label: "Connect Dhan", avatar: "D" },
+  { key: "manual", label: "Type a position myself", avatar: null },
+] as const;
+
+/** /login — screen one. Read-only positioning first, then email → OTP.
+ *  Auth backend exists (/auth/request-otp, /auth/verify-otp); broker
+ *  connect after sign-in is Madhan's side. */
 export default function Login() {
   const nav = useNavigate();
-  const [step, setStep] = useState<"email" | "otp">("email");
+  const [step, setStep] = useState<"landing" | "email" | "otp">("landing");
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
@@ -58,38 +70,136 @@ export default function Login() {
 
   return (
     <Screen padBottom={false}>
-      <div
-        style={{
-          flex: 1,
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "center",
-          paddingBottom: "18dvh",
-        }}
-      >
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={springSoft}
+      {/* Brand row: wordmark left, read-only chip right */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <span style={{ display: "flex", alignItems: "center", gap: 7 }}>
+          <IconBolt size={20} stroke={2.4} style={{ color: "var(--brand)" }} />
+          <span style={{ fontSize: 17, fontWeight: 700, letterSpacing: -0.3 }}>Zap</span>
+        </span>
+        <span
+          className="mono"
+          style={{
+            fontSize: 11,
+            fontWeight: 600,
+            letterSpacing: 0.5,
+            color: "var(--ink-2)",
+            border: "1px solid var(--line-strong)",
+            borderRadius: "var(--radius-full)",
+            padding: "5px 12px",
+          }}
         >
-          <h1 style={{ fontSize: 22, fontWeight: 700, letterSpacing: -0.4 }}>Zap</h1>
-          <p style={{ fontSize: 15, color: "var(--ink-2)", marginTop: 6, lineHeight: 1.5 }}>
-            {step === "email"
-              ? "A second pair of eyes on your open trades. Sign in to start."
-              : `Code sent to ${email.trim()}. Check your inbox.`}
-          </p>
-        </motion.div>
+          read only
+        </span>
+      </div>
 
-        <div style={{ marginTop: 26, display: "flex", flexDirection: "column", gap: 12 }}>
-          <AnimatePresence mode="popLayout" initial={false}>
+      <AnimatePresence mode="wait" initial={false}>
+        {step === "landing" ? (
+          <motion.div
+            key="landing"
+            initial={{ opacity: 0, x: -24 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -24 }}
+            transition={springSoft}
+            style={{ display: "flex", flexDirection: "column", paddingTop: 30 }}
+          >
+            <h1 style={{ fontSize: 26, fontWeight: 700, letterSpacing: -0.6, lineHeight: 1.2 }}>
+              A second pair of eyes on the trade you're in.
+            </h1>
+            <p style={{ fontSize: 15, lineHeight: 1.55, color: "var(--ink-2)", marginTop: 14 }}>
+              Tell it what you're watching for, in your own words. It re-reads your position, the
+              option chain and the index, and reaches you only when your own thinking is on the
+              line.
+            </p>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 30 }}>
+              {PATHS.map((p, i) => (
+                <motion.button
+                  key={p.key}
+                  initial={{ opacity: 0, y: 14 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ ...springSoft, delay: 0.08 + i * 0.06 }}
+                  whileTap={{ scale: pressScale }}
+                  onClick={() => {
+                    tapHaptic();
+                    setStep("email"); // all paths sign in first; broker connect follows
+                  }}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 12,
+                    textAlign: "left",
+                    padding: "15px 16px",
+                    background: "var(--surface)",
+                    borderRadius: "var(--radius)",
+                    boxShadow: "var(--shadow)",
+                  }}
+                >
+                  {p.avatar && (
+                    <span
+                      style={{
+                        width: 28,
+                        height: 28,
+                        borderRadius: "var(--radius-full)",
+                        background: "var(--brand-soft)",
+                        color: "var(--brand)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontSize: 13,
+                        fontWeight: 700,
+                        flexShrink: 0,
+                      }}
+                    >
+                      {p.avatar}
+                    </span>
+                  )}
+                  <span style={{ flex: 1, fontSize: 15, fontWeight: 600 }}>{p.label}</span>
+                  <IconChevronRight size={17} stroke={2.2} style={{ color: "var(--ink-3)" }} />
+                </motion.button>
+              ))}
+            </div>
+
+            <p style={{ fontSize: 13, lineHeight: 1.5, color: "var(--ink-3)", marginTop: 16 }}>
+              Zap can read your positions. It can never place, modify or cancel an order.
+            </p>
+
+            {MOCK && (
+              <button
+                onClick={() => nav("/watch", { replace: true })}
+                style={{
+                  fontSize: 13,
+                  color: "var(--ink-3)",
+                  padding: 10,
+                  marginTop: 18,
+                  alignSelf: "center",
+                }}
+              >
+                Continue in demo mode
+              </button>
+            )}
+          </motion.div>
+        ) : (
+          <motion.div
+            key="auth"
+            initial={{ opacity: 0, x: 24 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 24 }}
+            transition={springSoft}
+            style={{ display: "flex", flexDirection: "column", gap: 12, paddingTop: 34 }}
+          >
+            <h2 style={{ fontSize: 22, fontWeight: 700, letterSpacing: -0.4 }}>
+              {step === "email" ? "Sign in" : "Enter the code"}
+            </h2>
+            <p style={{ fontSize: 15, color: "var(--ink-2)", lineHeight: 1.5 }}>
+              {step === "email"
+                ? "Email first. Your broker connects after."
+                : `Code sent to ${email.trim()}. Check your inbox.`}
+            </p>
+
             {step === "email" ? (
-              <motion.input
-                key="email"
-                initial={{ opacity: 0, x: -24 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -24 }}
-                transition={spring}
+              <input
                 type="email"
+                autoFocus
                 autoComplete="email"
                 inputMode="email"
                 placeholder="you@example.com"
@@ -99,12 +209,7 @@ export default function Login() {
                 style={fieldStyle}
               />
             ) : (
-              <motion.input
-                key="otp"
-                initial={{ opacity: 0, x: 24 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 24 }}
-                transition={spring}
+              <input
                 autoFocus
                 autoComplete="one-time-code"
                 inputMode="numeric"
@@ -116,62 +221,43 @@ export default function Login() {
                 style={{ ...fieldStyle, letterSpacing: 4 }}
               />
             )}
-          </AnimatePresence>
 
-          {error && (
-            <motion.p
-              initial={{ opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={springSoft}
-              style={{ fontSize: 13, color: "var(--flipped)" }}
+            {error && <p style={{ fontSize: 13, color: "var(--flipped)" }}>{error}</p>}
+
+            <motion.button
+              whileTap={{ scale: pressScale }}
+              transition={spring}
+              disabled={busy || (step === "email" ? !email.trim() : code.trim().length < 4)}
+              onClick={step === "email" ? sendCode : verify}
+              animate={{
+                opacity:
+                  busy || (step === "email" ? !email.trim() : code.trim().length < 4) ? 0.45 : 1,
+              }}
+              style={{
+                padding: "15px 18px",
+                borderRadius: "var(--radius-sm)",
+                background: "var(--brand)",
+                color: "var(--brand-ink)",
+                fontSize: 17,
+                fontWeight: 600,
+              }}
             >
-              {error}
-            </motion.p>
-          )}
+              {busy ? "One sec…" : step === "email" ? "Send code" : "Sign in"}
+            </motion.button>
 
-          <motion.button
-            whileTap={{ scale: pressScale }}
-            transition={spring}
-            disabled={busy || (step === "email" ? !email.trim() : code.trim().length < 4)}
-            onClick={step === "email" ? sendCode : verify}
-            animate={{
-              opacity: busy || (step === "email" ? !email.trim() : code.trim().length < 4) ? 0.45 : 1,
-            }}
-            style={{
-              padding: "15px 18px",
-              borderRadius: "var(--radius-sm)",
-              background: "var(--brand)",
-              color: "var(--brand-ink)",
-              fontSize: 17,
-              fontWeight: 600,
-            }}
-          >
-            {busy ? "One sec…" : step === "email" ? "Send code" : "Sign in"}
-          </motion.button>
-
-          {step === "otp" && (
             <button
               onClick={() => {
-                setStep("email");
+                setStep(step === "otp" ? "email" : "landing");
                 setCode("");
                 setError(null);
               }}
               style={{ fontSize: 13, color: "var(--ink-2)", padding: 8 }}
             >
-              Different email
+              {step === "otp" ? "Different email" : "Back"}
             </button>
-          )}
-
-          {MOCK && (
-            <button
-              onClick={() => nav("/watch", { replace: true })}
-              style={{ fontSize: 13, color: "var(--ink-3)", padding: 8 }}
-            >
-              Continue in demo mode
-            </button>
-          )}
-        </div>
-      </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </Screen>
   );
 }
