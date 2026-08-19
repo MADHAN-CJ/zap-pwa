@@ -60,7 +60,7 @@ market only when a human confirms in this app. Therefore:
   system). Build both from day one with CSS custom-property tokens in
   `theme.css` — never hardcode a color in a component.
 - **Color:** the app's main color is a **rich forest green** (or whatever green
-  reads best on the mode's background — white and/or blue-tinted surfaces).
+  reads best on the mode's background — white and/or black surfaces).
   The two modes may use **different primary shades** — pick per mode for
   **contrast first**: the primary must hold up against its background and
   text must hold up against the primary (WCAG AA minimum). Brand history for
