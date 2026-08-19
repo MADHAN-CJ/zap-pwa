@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import { Navigate, useNavigate, useParams } from "react-router-dom";
+import { Navigate, useLocation, useNavigate, useParams } from "react-router-dom";
 import { motion, AnimatePresence } from "motion/react";
-import { IconArrowUp } from "@tabler/icons-react";
 import { Screen } from "@/components/Screen";
+import { PromptBar } from "@/components/PromptBar";
 import { StatusPill } from "@/components/StatusPill";
 import { ChatBubble, MessageActions, TypingBubble } from "@/components/ChatBubble";
 import { askAgent, getWatch } from "@/api/watch";
@@ -27,7 +27,6 @@ export default function WatchAsk() {
   const [typing, setTyping] = useState(false);
   const [failed, setFailed] = useState(false);
   const threadRef = useRef<HTMLDivElement>(null);
-  const taRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     let live = true;
@@ -50,10 +49,17 @@ export default function WatchAsk() {
     if (el) el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
   }, [turns, typing]);
 
+  // A question handed over from the Flipped screen's prompt bar.
+  const handoff = (useLocation().state as { ask?: string } | null)?.ask;
+  useEffect(() => {
+    if (handoff && turns.length === 1 && !typing) send(handoff);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [handoff]);
+
   if (missing) return <Navigate to="/watch" replace />;
 
-  async function send() {
-    const question = input.trim();
+  async function send(preset?: string) {
+    const question = (preset ?? input).trim();
     if (!question || typing) return;
     tapHaptic();
     setFailed(false);
@@ -64,7 +70,6 @@ export default function WatchAsk() {
     }));
     setTurns((t) => [...t, { role: "trader", text: question }]);
     setInput("");
-    if (taRef.current) taRef.current.style.height = "auto";
     setTyping(true);
     try {
       const reply = await askAgent(id, question, history);
@@ -215,69 +220,10 @@ export default function WatchAsk() {
         ))}
       </div>
 
-      {/* Input bar — end of the flex column. */}
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          send();
-        }}
-        style={{ display: "flex", gap: 8, alignItems: "center", padding: "10px 0 8px" }}
-      >
-        <textarea
-          ref={taRef}
-          value={input}
-          rows={1}
-          onChange={(e) => {
-            setInput(e.target.value);
-            // Auto-grow up to ~4 lines, then scroll inside.
-            e.target.style.height = "auto";
-            e.target.style.height = `${Math.min(e.target.scrollHeight, 108)}px`;
-          }}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && !e.shiftKey) {
-              e.preventDefault();
-              send();
-              (e.target as HTMLTextAreaElement).style.height = "auto";
-            }
-          }}
-          placeholder="Ask about the position…"
-          enterKeyHint="send"
-          style={{
-            flex: 1,
-            fontSize: 16, // >= 16 — prevents iOS zoom
-            lineHeight: 1.4,
-            padding: "12px 16px",
-            borderRadius: 22,
-            border: "1px solid var(--line)",
-            background: "var(--surface)",
-            color: "var(--ink)",
-            outline: "none",
-            resize: "none",
-            maxHeight: 108,
-          }}
-        />
-        <motion.button
-          type="submit"
-          whileTap={{ scale: pressScale }}
-          transition={spring}
-          disabled={!input.trim() || typing}
-          aria-label="Send"
-          style={{
-            width: 44,
-            height: 44,
-            borderRadius: "var(--radius-full)",
-            background: "var(--brand)",
-            color: "var(--brand-ink)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            flexShrink: 0,
-            opacity: !input.trim() || typing ? 0.4 : 1,
-          }}
-        >
-          <IconArrowUp size={20} stroke={2.4} />
-        </motion.button>
-      </form>
+      <div style={{ padding: "10px 0 8px" }}>
+        <PromptBar value={input} onChange={setInput} onSend={() => send()} disabled={typing} />
+      </div>
+
     </Screen>
   );
 }

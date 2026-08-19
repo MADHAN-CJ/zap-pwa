@@ -2,9 +2,10 @@ import { useCallback, useEffect, useState } from "react";
 import { Navigate, useNavigate, useParams } from "react-router-dom";
 import { motion } from "motion/react";
 import { Screen } from "@/components/Screen";
+import { PromptBar } from "@/components/PromptBar";
 import { StatusPill } from "@/components/StatusPill";
 import { getFeed, getWatch } from "@/api/watch";
-import { springSoft, spring, pressScale } from "@/lib/motion";
+import { springSoft } from "@/lib/motion";
 import { tapHaptic } from "@/lib/haptics";
 import type { FeedEntry, Watch, WatchItem } from "@/types";
 
@@ -16,6 +17,7 @@ export default function WatchDetail() {
   const nav = useNavigate();
   const [data, setData] = useState<Data | null>(null);
   const [state, setState] = useState<"loading" | "error" | "missing" | "ready">("loading");
+  const [ask, setAsk] = useState("");
 
   const load = useCallback(async () => {
     setState("loading");
@@ -75,7 +77,24 @@ export default function WatchDetail() {
   if (watch.status === "flipped") {
     const gone = items.filter((i) => i.state === "gone").length;
     return (
-      <Screen back="/watch" tag={`${gone} of ${items.length} flipped`}>
+      <Screen back="/watch" tag={`${gone} of ${items.length} flipped`} padBottom={false}>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            height: "calc(100dvh - var(--safe-top) - var(--safe-bottom) - 66px)",
+            minHeight: 0,
+          }}
+        >
+        <div
+          style={{
+            flex: 1,
+            minHeight: 0,
+            overflowY: "auto",
+            WebkitOverflowScrolling: "touch",
+            paddingBottom: 12,
+          }}
+        >
         {watch.priceLine && (
           <div
             className="mono"
@@ -204,26 +223,22 @@ export default function WatchDetail() {
           })}
         </motion.div>
 
-        <motion.button
-          whileTap={{ scale: pressScale }}
-          transition={spring}
-          onClick={() => {
-            tapHaptic();
-            nav(`/watch/${id}/ask`);
-          }}
-          style={{
-            marginTop: 24,
-            padding: "14px 18px",
-            borderRadius: "var(--radius-full)",
-            background: "var(--surface-2)",
-            border: "1px solid var(--line-strong)",
-            color: "var(--ink-3)",
-            fontSize: 15,
-            textAlign: "left",
-          }}
-        >
-          Ask it anything about the position…
-        </motion.button>
+        </div>
+
+        {/* The chat bar, where it usually lives: pinned at the bottom.
+            Typing here hands the question straight into the Ask chat. */}
+        <div style={{ padding: "10px 0 8px" }}>
+          <PromptBar
+            value={ask}
+            onChange={setAsk}
+            onSend={() => {
+              tapHaptic();
+              nav(`/watch/${id}/ask`, { state: { ask: ask.trim() } });
+            }}
+            placeholder="Ask it anything about the position…"
+          />
+        </div>
+        </div>
       </Screen>
     );
   }
@@ -302,7 +317,7 @@ export default function WatchDetail() {
                     {e.text}
                   </div>
                 ) : (
-                  <div style={{ fontSize: 13, lineHeight: 1.45, color: "var(--ink-3)" }}>
+                  <div style={{ fontSize: 15, lineHeight: 1.5, color: "var(--ink-3)" }}>
                     {e.text}
                   </div>
                 )}

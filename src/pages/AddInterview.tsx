@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "motion/react";
-import { IconArrowUp } from "@tabler/icons-react";
 import { Screen } from "@/components/Screen";
+import { PromptBar } from "@/components/PromptBar";
 import { ChatBubble, MessageActions, TypingBubble } from "@/components/ChatBubble";
 import { interviewTurn, retryInterviewTurn } from "@/api/watch";
 import { pressScale, spring, springSoft } from "@/lib/motion";
@@ -184,46 +184,15 @@ export default function AddInterview() {
             initial={{ opacity: 0, y: 18 }}
             animate={{ opacity: 1, y: 0 }}
             transition={springSoft}
-            style={{ display: "flex", gap: 8, alignItems: "center", padding: "10px 0 8px" }}
+            style={{ padding: "10px 0 8px" }}
           >
-            <input
+            <PromptBar
               value={draft}
-              onChange={(e) => setDraft(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && send(draft)}
-              enterKeyHint="send"
+              onChange={setDraft}
+              onSend={() => send(draft)}
               placeholder="Type your answer…"
-              style={{
-                flex: 1,
-                fontSize: 16, // >= 16px — prevents iOS focus zoom
-                padding: "12px 16px",
-                borderRadius: "var(--radius-full)",
-                border: "1px solid var(--line)",
-                background: "var(--surface)",
-                color: "var(--ink)",
-                outline: "none",
-              }}
+              disabled={typing}
             />
-            <motion.button
-              whileTap={{ scale: pressScale }}
-              transition={spring}
-              onClick={() => send(draft)}
-              disabled={!draft.trim() || typing}
-              aria-label="Send"
-              animate={{ opacity: !draft.trim() || typing ? 0.45 : 1 }}
-              style={{
-                width: 44,
-                height: 44,
-                borderRadius: "var(--radius-full)",
-                background: "var(--brand)",
-                color: "var(--brand-ink)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                flexShrink: 0,
-              }}
-            >
-              <IconArrowUp size={20} stroke={2.4} />
-            </motion.button>
           </motion.div>
         )}
       </div>
