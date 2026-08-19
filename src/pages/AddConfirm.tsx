@@ -118,13 +118,13 @@ export default function AddConfirm() {
           }}
         >
           <ThinkingOrb state="weaving" size={64} />
-          <p className="shimmer" style={{ fontSize: 14, fontWeight: 500, textAlign: "center" }}>
+          <p className="shimmer" style={{ fontSize: 13, fontWeight: 500, textAlign: "center" }}>
             Turning that into five things it can watch…
           </p>
         </div>
       )}
 
-      {error && <p style={{ fontSize: 14, color: "var(--flipped)", paddingTop: 8 }}>{error}</p>}
+      {error && <p style={{ fontSize: 13, color: "var(--flipped)", paddingTop: 8 }}>{error}</p>}
 
       {thesis && (
         <>
@@ -196,7 +196,7 @@ export default function AddConfirm() {
                 setAddOpen(true);
               }}
               style={{
-                fontSize: 14,
+                fontSize: 13,
                 fontWeight: 600,
                 color: "var(--ink-2)",
                 padding: "12px 2px",

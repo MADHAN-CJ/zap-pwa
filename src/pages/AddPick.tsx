@@ -149,7 +149,7 @@ export default function AddPick() {
             tapHaptic();
             setManualOpen((v) => !v);
           }}
-          style={{ fontSize: 14, fontWeight: 600, color: "var(--ink-2)", padding: "6px 2px" }}
+          style={{ fontSize: 13, fontWeight: 600, color: "var(--ink-2)", padding: "6px 2px" }}
         >
           {manualOpen ? "Never mind" : "Tell it about this trade"}
         </motion.button>
@@ -198,7 +198,7 @@ export default function AddPick() {
                       }}
                       style={{
                         flex: 1,
-                        fontSize: 14,
+                        fontSize: 13,
                         fontWeight: 600,
                         padding: "9px 0",
                         borderRadius: 8,

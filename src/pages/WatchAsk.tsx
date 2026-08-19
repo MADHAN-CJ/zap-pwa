@@ -153,7 +153,7 @@ export default function WatchAsk() {
                 <span
                   style={{
                     display: "block",
-                    fontSize: 10.5,
+                    fontSize: 11,
                     fontWeight: 600,
                     letterSpacing: 0.8,
                     textTransform: "uppercase",
@@ -206,7 +206,7 @@ export default function WatchAsk() {
               background: "var(--surface)",
               boxShadow: "var(--shadow)",
               color: "var(--ink-2)",
-              fontSize: 14,
+              fontSize: 13,
               fontWeight: 500,
             }}
           >

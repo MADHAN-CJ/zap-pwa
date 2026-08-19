@@ -28,7 +28,7 @@ export default function Digest() {
           onClick={load}
           style={{
             marginTop: 24,
-            fontSize: 14,
+            fontSize: 13,
             color: "var(--ink-2)",
             textAlign: "center",
             padding: 12,
@@ -61,7 +61,7 @@ export default function Digest() {
                   <span
                     className="mono"
                     style={{
-                      fontSize: 11.5,
+                      fontSize: 11,
                       fontWeight: 600,
                       letterSpacing: 1.2,
                       textTransform: "uppercase",
@@ -123,7 +123,7 @@ export default function Digest() {
                           style={{
                             display: "flex",
                             gap: 10,
-                            fontSize: 14,
+                            fontSize: 13,
                             lineHeight: 1.55,
                             color: "var(--ink-2)",
                           }}
@@ -160,7 +160,7 @@ export default function Digest() {
                   <span
                     className="mono"
                     style={{
-                      fontSize: 11.5,
+                      fontSize: 11,
                       fontWeight: 600,
                       letterSpacing: 1.2,
                       textTransform: "uppercase",
@@ -170,7 +170,7 @@ export default function Digest() {
                   >
                     {e.symbol}
                   </span>
-                  <span style={{ fontSize: 14, lineHeight: 1.5, color: "var(--ink-3)" }}>
+                  <span style={{ fontSize: 13, lineHeight: 1.5, color: "var(--ink-3)" }}>
                     {e.quietLine ?? "Quiet day. Nothing on your five moved."}
                   </span>
                 </motion.div>
@@ -185,7 +185,7 @@ export default function Digest() {
             style={{
               marginTop: 56,
               textAlign: "center",
-              fontSize: 14,
+              fontSize: 13,
               color: "var(--ink-3)",
             }}
           >

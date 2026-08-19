@@ -57,7 +57,7 @@ export function WatchItemRow({
       <div style={{ flex: 1, minWidth: 0 }}>
         <div
           style={{
-            fontSize: 14.5,
+            fontSize: 15,
             lineHeight: 1.35,
             color: showState && gone ? "var(--flipped)" : "var(--ink)",
             fontWeight: showState && gone ? 600 : 400,
@@ -72,7 +72,7 @@ export function WatchItemRow({
       {showState && (
         <span
           style={{
-            fontSize: 12,
+            fontSize: 11,
             fontWeight: 600,
             color: gone ? "var(--flipped)" : "var(--holding)",
             background: gone ? "var(--flipped-soft)" : "var(--holding-soft)",

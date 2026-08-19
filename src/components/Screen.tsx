@@ -79,7 +79,7 @@ export function Screen({
           {tag && (
             <span
               style={{
-                fontSize: 12,
+                fontSize: 11,
                 fontWeight: 600,
                 color: "var(--ink-2)",
                 background: "var(--surface-2)",

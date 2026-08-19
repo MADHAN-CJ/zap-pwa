@@ -94,7 +94,7 @@ export default function Home() {
           onClick={load}
           style={{
             marginTop: 28,
-            fontSize: 14,
+            fontSize: 13,
             color: "var(--ink-2)",
             textAlign: "center",
             padding: 12,
@@ -111,7 +111,7 @@ export default function Home() {
           transition={springSoft}
           style={{
             marginTop: 28,
-            fontSize: 14,
+            fontSize: 13,
             lineHeight: 1.5,
             color: "var(--ink-3)",
             textAlign: "center",

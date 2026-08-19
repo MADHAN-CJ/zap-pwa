@@ -51,7 +51,7 @@ export function TabBar() {
               padding: "9px 18px",
               borderRadius: "var(--radius-full)",
               color: active ? "var(--brand-ink)" : "var(--ink-2)",
-              fontSize: 14,
+              fontSize: 13,
               fontWeight: 600,
             }}
           >

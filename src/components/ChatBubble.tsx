@@ -26,7 +26,7 @@ export function ChatBubble({
           alignSelf: "stretch",
           padding: "2px 4px",
           color: "var(--ink)",
-          fontSize: 15.5,
+          fontSize: 15,
           lineHeight: 1.55,
           whiteSpace: "pre-wrap",
           userSelect: "text",
@@ -88,7 +88,7 @@ export function MessageActions({ text, onRetry }: { text: string; onRetry?: () =
     display: "flex",
     alignItems: "center",
     gap: 5,
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: 500,
     color: "var(--ink-3)",
     padding: "4px 8px",
@@ -190,12 +190,12 @@ export function TypingBubble({
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -8 }}
           transition={springSoft}
-          style={{ fontSize: 14, fontWeight: 500 }}
+          style={{ fontSize: 13, fontWeight: 500 }}
         >
           {current}
         </motion.span>
       </AnimatePresence>
-      <span className="mono" style={{ fontSize: 12, color: "var(--ink-3)" }}>
+      <span className="mono" style={{ fontSize: 11, color: "var(--ink-3)" }}>
         {elapsed.toFixed(1)}s
       </span>
     </motion.div>

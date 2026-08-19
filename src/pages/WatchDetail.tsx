@@ -46,7 +46,7 @@ export default function WatchDetail() {
             onClick={load}
             style={{
               marginTop: 32,
-              fontSize: 14,
+              fontSize: 13,
               color: "var(--ink-3)",
               textAlign: "center",
             }}
@@ -79,7 +79,7 @@ export default function WatchDetail() {
         {watch.priceLine && (
           <div
             className="mono"
-            style={{ fontSize: 13.5, color: "var(--ink-2)", padding: "0 2px 14px" }}
+            style={{ fontSize: 13, color: "var(--ink-2)", padding: "0 2px 14px" }}
           >
             {watch.priceLine}
           </div>
@@ -116,7 +116,7 @@ export default function WatchDetail() {
               <span style={{ width: 6, height: 6, borderRadius: 999, background: "var(--flipped)" }} />
               What changed
             </div>
-            <p style={{ fontSize: 15.5, lineHeight: 1.5, color: "var(--ink)" }}>
+            <p style={{ fontSize: 15, lineHeight: 1.5, color: "var(--ink)" }}>
               {watch.changeSummary}
             </p>
             </div>
@@ -163,14 +163,14 @@ export default function WatchDetail() {
                   style={{
                     flex: 1,
                     minWidth: 0,
-                    fontSize: 14.5,
+                    fontSize: 15,
                     lineHeight: 1.35,
                     fontWeight: gone ? 600 : 400,
                     color: gone ? "var(--flipped)" : "var(--ink)",
                   }}
                 >
                   {item.label}{" "}
-                  <span style={{ fontSize: 12, color: "var(--ink-3)", whiteSpace: "nowrap" }}>
+                  <span style={{ fontSize: 11, color: "var(--ink-3)", whiteSpace: "nowrap" }}>
                     {item.kind === "hard" ? "⚡" : "◐"}
                   </span>
                 </span>
@@ -186,7 +186,7 @@ export default function WatchDetail() {
                 >
                   <span
                     style={{
-                      fontSize: 11.5,
+                      fontSize: 11,
                       fontWeight: 600,
                       color: gone ? "var(--flipped)" : "var(--holding)",
                     }}
@@ -194,7 +194,7 @@ export default function WatchDetail() {
                     {gone ? "gone" : "holding"}
                   </span>
                   {item.lastCheckedAt && (
-                    <span className="mono" style={{ fontSize: 10.5, color: "var(--ink-3)" }}>
+                    <span className="mono" style={{ fontSize: 11, color: "var(--ink-3)" }}>
                       {item.lastCheckedAt}
                     </span>
                   )}
@@ -294,7 +294,7 @@ export default function WatchDetail() {
                       borderRadius: "var(--radius-sm)",
                       boxShadow: "var(--shadow)",
                       padding: "11px 13px",
-                      fontSize: 14.5,
+                      fontSize: 15,
                       lineHeight: 1.5,
                       color: "var(--ink)",
                     }}
