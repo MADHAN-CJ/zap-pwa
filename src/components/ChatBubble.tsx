@@ -5,7 +5,9 @@ import { ThinkingOrb } from "thinking-orbs";
 import { spring, springSoft, pressScale } from "@/lib/motion";
 import { selectHaptic } from "@/lib/haptics";
 
-/** The one chat bubble — Interview and Ask both use this. */
+/** The one chat message — Interview and Ask both use this.
+ *  AI-chatbot convention: the trader gets a bubble; the agent's reply is
+ *  plain full-width text on the page, no speech-bubble chrome. */
 export function ChatBubble({
   role,
   children,
@@ -14,25 +16,44 @@ export function ChatBubble({
   children: ReactNode;
 }) {
   const isAgent = role === "agent";
+  if (isAgent) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={springSoft}
+        style={{
+          alignSelf: "stretch",
+          padding: "2px 4px",
+          color: "var(--ink)",
+          fontSize: 15.5,
+          lineHeight: 1.55,
+          whiteSpace: "pre-wrap",
+          userSelect: "text",
+          WebkitUserSelect: "text",
+        }}
+      >
+        {children}
+      </motion.div>
+    );
+  }
   return (
     <motion.div
       initial={{ opacity: 0, y: 14, scale: 0.96 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={springSoft}
       style={{
-        alignSelf: isAgent ? "flex-start" : "flex-end",
+        alignSelf: "flex-end",
         maxWidth: "82%",
         padding: "10px 14px",
         borderRadius: 18,
-        borderBottomLeftRadius: isAgent ? 6 : 18,
-        borderBottomRightRadius: isAgent ? 18 : 6,
-        background: isAgent ? "var(--surface)" : "var(--brand)",
-        color: isAgent ? "var(--ink)" : "var(--brand-ink)",
-        boxShadow: isAgent ? "var(--shadow)" : "none",
+        borderBottomRightRadius: 6,
+        background: "var(--brand)",
+        color: "var(--brand-ink)",
         fontSize: 15,
         lineHeight: 1.45,
         whiteSpace: "pre-wrap",
-        transformOrigin: isAgent ? "bottom left" : "bottom right",
+        transformOrigin: "bottom right",
         userSelect: "text",
         WebkitUserSelect: "text",
       }}
@@ -79,7 +100,7 @@ export function MessageActions({ text, onRetry }: { text: string; onRetry?: () =
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ ...springSoft, delay: 0.25 }}
-      style={{ display: "flex", gap: 2, alignSelf: "flex-start", marginTop: -2, marginLeft: 6 }}
+      style={{ display: "flex", gap: 2, alignSelf: "flex-start", marginTop: -2, marginLeft: -4 }}
     >
       <motion.button whileTap={{ scale: pressScale }} transition={spring} onClick={copy} aria-label="Copy" style={btn}>
         <AnimatePresence mode="popLayout" initial={false}>
