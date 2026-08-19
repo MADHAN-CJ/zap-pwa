@@ -1,3 +1,108 @@
+/* ============================================================
+   Zap — design tokens. Every color in the app comes from here.
+   Light + dark, switched via data-theme on <html> (see lib/theme.ts):
+   "light" | "dark", or absent = follow system.
+   ============================================================ */
+
+:root {
+  /* -- Light mode (default) -- */
+  --bg: #f7f8f7;            /* app canvas, warm off-white */
+  --surface: #ffffff;       /* cards, sheets */
+  --surface-2: #eef1ef;     /* recessed / secondary surfaces */
+  --ink: #101613;           /* primary text, green-tinted near-black */
+  --ink-2: #5b665f;         /* secondary text */
+  --ink-3: #9aa49e;         /* tertiary / placeholder */
+  --line: #e3e7e4;          /* hairline borders */
+
+  /* Brand — rich forest green, reserved for primary actions */
+  --brand: #0d5c3f;
+  --brand-ink: #ffffff;     /* text on brand */
+  --brand-soft: #e3efe9;    /* brand-tinted fill (chips, subtle emphasis) */
+
+  /* Status semantics (deliberately NOT brand green — see CLAUDE.md) */
+  --holding: #5f7a6c;       /* calm, desaturated sage: "this is fine" */
+  --holding-soft: #e9efeb;
+  --bending: #9a6b15;       /* amber: "leaning, watch it" */
+  --bending-soft: #f7ecd8;
+  --flipped: #b3401e;       /* ember: "this needs you" — warm, not alarm-red */
+  --flipped-soft: #f9e5dd;
+
+  --buy: #0d6e46;
+  --sell: #b3401e;
+
+  --radius: 16px;
+  --radius-sm: 10px;
+  --radius-full: 999px;
+
+  --font: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, monospace;
+
+  --shadow: 0 1px 2px rgba(16, 22, 19, 0.04), 0 8px 24px rgba(16, 22, 19, 0.06);
+
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* -- Dark mode: system preference (unless explicitly light) -- */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0b0f0d;
+    --surface: #141a16;
+    --surface-2: #1c231f;
+    --ink: #eef2ef;
+    --ink-2: #99a49d;
+    --ink-3: #5d6862;
+    --line: #232b26;
+
+    --brand: #2fbf80;        /* brighter green for contrast on black */
+    --brand-ink: #06130c;
+    --brand-soft: #14261d;
+
+    --holding: #8aa595;
+    --holding-soft: #18201b;
+    --bending: #d9a44a;
+    --bending-soft: #271f10;
+    --flipped: #e5764d;
+    --flipped-soft: #2a160e;
+
+    --buy: #2fbf80;
+    --sell: #e5764d;
+
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.35);
+  }
+}
+
+/* -- Dark mode: explicit user choice -- */
+:root[data-theme="dark"] {
+  --bg: #0b0f0d;
+  --surface: #141a16;
+  --surface-2: #1c231f;
+  --ink: #eef2ef;
+  --ink-2: #99a49d;
+  --ink-3: #5d6862;
+  --line: #232b26;
+
+  --brand: #2fbf80;
+  --brand-ink: #06130c;
+  --brand-soft: #14261d;
+
+  --holding: #8aa595;
+  --holding-soft: #18201b;
+  --bending: #d9a44a;
+  --bending-soft: #271f10;
+  --flipped: #e5764d;
+  --flipped-soft: #2a160e;
+
+  --buy: #2fbf80;
+  --sell: #e5764d;
+
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+/* ============================================================
+   Base
+   ============================================================ */
+
 *,
 *::before,
 *::after {
@@ -12,7 +117,46 @@ body,
   height: 100%;
 }
 
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
 body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--ink);
   -webkit-font-smoothing: antialiased;
+  overscroll-behavior-y: none;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+input,
+textarea {
+  user-select: text;
+  -webkit-user-select: text;
+  font-family: var(--font);
+}
+
+button {
+  font-family: var(--font);
+  border: none;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+}
+
+.mono {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }
