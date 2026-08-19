@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { IconArrowUp } from "@tabler/icons-react";
 import { Screen } from "@/components/Screen";
 import { StatusPill } from "@/components/StatusPill";
-import { ChatBubble, TypingBubble } from "@/components/ChatBubble";
+import { ChatBubble, MessageActions, TypingBubble } from "@/components/ChatBubble";
 import { askAgent, getWatch } from "@/api/watch";
 import { spring, springSoft, pressScale } from "@/lib/motion";
 import { tapHaptic, selectHaptic } from "@/lib/haptics";
@@ -26,6 +26,7 @@ export default function WatchAsk() {
   const [typing, setTyping] = useState(false);
   const [failed, setFailed] = useState(false);
   const threadRef = useRef<HTMLDivElement>(null);
+  const taRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     let live = true;
@@ -59,9 +60,34 @@ export default function WatchAsk() {
     }));
     setTurns((t) => [...t, { role: "trader", text: question }]);
     setInput("");
+    if (taRef.current) taRef.current.style.height = "auto";
     setTyping(true);
     try {
       const reply = await askAgent(id, question, history);
+      setTurns((t) => [...t, reply]);
+    } catch {
+      setFailed(true);
+    } finally {
+      setTyping(false);
+    }
+  }
+
+  /** Re-run the last question: drop the last agent turn, ask again with the
+   *  history that preceded it. */
+  async function retryLast() {
+    if (typing) return;
+    const lastAgent = turns.length - 1;
+    if (turns[lastAgent]?.role !== "agent" || lastAgent === 0) return;
+    const question = turns[lastAgent - 1]?.text;
+    if (!question) return;
+    const prior = turns.slice(0, lastAgent - 1).map((t) => ({
+      role: t.role === "trader" ? ("user" as const) : ("assistant" as const),
+      content: t.text,
+    }));
+    setTurns((t) => t.slice(0, -1));
+    setTyping(true);
+    try {
+      const reply = await askAgent(id, question, prior);
       setTurns((t) => [...t, reply]);
     } catch {
       setFailed(true);
@@ -97,6 +123,12 @@ export default function WatchAsk() {
             style={{ display: "flex", flexDirection: "column", gap: 6, alignItems: t.role === "agent" ? "flex-start" : "flex-end" }}
           >
             <ChatBubble role={t.role}>{t.text}</ChatBubble>
+            {t.role === "agent" && i > 0 && !typing && (
+              <MessageActions
+                text={t.text}
+                onRetry={i === turns.length - 1 ? retryLast : undefined}
+              />
+            )}
             {/* Only ever rendered when the API returned it — never placeholder copy. */}
             {t.role === "agent" && t.historyNote && (
               <motion.div
@@ -166,20 +198,37 @@ export default function WatchAsk() {
         }}
         style={{ display: "flex", gap: 8, alignItems: "center", padding: "10px 0 8px" }}
       >
-        <input
+        <textarea
+          ref={taRef}
           value={input}
-          onChange={(e) => setInput(e.target.value)}
+          rows={1}
+          onChange={(e) => {
+            setInput(e.target.value);
+            // Auto-grow up to ~4 lines, then scroll inside.
+            e.target.style.height = "auto";
+            e.target.style.height = `${Math.min(e.target.scrollHeight, 108)}px`;
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && !e.shiftKey) {
+              e.preventDefault();
+              send();
+              (e.target as HTMLTextAreaElement).style.height = "auto";
+            }
+          }}
           placeholder="Ask about the position…"
           enterKeyHint="send"
           style={{
             flex: 1,
             fontSize: 16, // >= 16 — prevents iOS zoom
+            lineHeight: 1.4,
             padding: "12px 16px",
-            borderRadius: "var(--radius-full)",
+            borderRadius: 22,
             border: "1px solid var(--line)",
             background: "var(--surface)",
             color: "var(--ink)",
             outline: "none",
+            resize: "none",
+            maxHeight: 108,
           }}
         />
         <motion.button

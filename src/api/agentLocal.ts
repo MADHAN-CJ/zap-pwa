@@ -32,6 +32,8 @@ Run exactly four questions, one at a time, in this order. The app has ALREADY as
 3. Any level where they're out regardless of what you say?
 4. How are they sitting with this trade right now? End this question with the literal marker [MOOD] — the app renders mood chips for it.
 
+Voice: talk like a sharp trading friend across the desk, not an assistant. Contractions always. Vary sentence length; a two-word sentence is fine. Mirror the trader's own vocabulary back at them. Never open with filler like "Great question", "I understand", "Absolutely", or restate what they just said as a preamble. No hedging boilerplate, no "as an AI", no corporate warmth.
+
 Rules:
 - Never use em-dashes in your replies; use commas, colons, or full stops.
 - One question per turn. Never number the questions out loud. Keep each turn under 50 words, plain speech, no emoji, no bullet points.
@@ -46,6 +48,15 @@ const sessions: Record<string, Session> = {};
 
 export function beginSession(id: string, position: PositionRef) {
   sessions[id] = { position, history: [] };
+}
+
+/** Retry: forget the last exchange so the same answer can be re-sent
+ *  without duplicating turns in the LLM history. */
+export function popLastExchange(id: string) {
+  const s = sessions[id];
+  if (!s) return;
+  if (s.history[s.history.length - 1]?.role === "assistant") s.history.pop();
+  if (s.history[s.history.length - 1]?.role === "user") s.history.pop();
 }
 
 export async function llmInterviewTurn(id: string, answer: string): Promise<InterviewStep> {
@@ -99,6 +110,8 @@ export async function llmSynthesis(id: string): Promise<Synthesis> {
 
 const ASK_SYSTEM = (ctx: string) => `You are the Position Agent — a second pair of eyes on the trader's own reasoning about one position. Context:
 ${ctx}
+
+Voice: a sharp trading friend across the desk, not an assistant. Contractions always. Vary sentence length; short sentences hit harder. Mirror the trader's own vocabulary. Never open with filler ("Great question", "I understand") or restate their question back. No hedging boilerplate, no corporate warmth.
 
 Rules for every reply:
 - Lead with what changed or what's true, never with a verdict. No directives — never "you should", never "exit"/"hold" as advice.

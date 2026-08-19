@@ -1,6 +1,8 @@
-import { motion } from "motion/react";
-import { springSoft } from "@/lib/motion";
-import type { ReactNode } from "react";
+import { motion, AnimatePresence } from "motion/react";
+import { useState, type CSSProperties, type ReactNode } from "react";
+import { IconCopy, IconCheck, IconRefresh } from "@tabler/icons-react";
+import { spring, springSoft, pressScale } from "@/lib/motion";
+import { selectHaptic } from "@/lib/haptics";
 
 /** The one chat bubble — Interview and Ask both use this. */
 export function ChatBubble({
@@ -30,9 +32,95 @@ export function ChatBubble({
         lineHeight: 1.45,
         whiteSpace: "pre-wrap",
         transformOrigin: isAgent ? "bottom left" : "bottom right",
+        userSelect: "text",
+        WebkitUserSelect: "text",
       }}
     >
       {children}
+    </motion.div>
+  );
+}
+
+/** Claude-style actions under an agent bubble: copy, and optionally retry. */
+export function MessageActions({ text, onRetry }: { text: string; onRetry?: () => void }) {
+  const [copied, setCopied] = useState(false);
+
+  async function copy() {
+    selectHaptic();
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch {
+      // iOS fallback: clipboard API can fail outside a secure context.
+      const ta = document.createElement("textarea");
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      ta.remove();
+    }
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1600);
+  }
+
+  const btn: CSSProperties = {
+    display: "flex",
+    alignItems: "center",
+    gap: 5,
+    fontSize: 12,
+    fontWeight: 500,
+    color: "var(--ink-3)",
+    padding: "4px 8px",
+    borderRadius: "var(--radius-full)",
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ ...springSoft, delay: 0.25 }}
+      style={{ display: "flex", gap: 2, alignSelf: "flex-start", marginTop: -2, marginLeft: 6 }}
+    >
+      <motion.button whileTap={{ scale: pressScale }} transition={spring} onClick={copy} aria-label="Copy" style={btn}>
+        <AnimatePresence mode="popLayout" initial={false}>
+          {copied ? (
+            <motion.span
+              key="check"
+              initial={{ scale: 0.5, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.5, opacity: 0 }}
+              transition={spring}
+              style={{ display: "flex", alignItems: "center", gap: 5, color: "var(--brand)" }}
+            >
+              <IconCheck size={14} stroke={2.2} /> Copied
+            </motion.span>
+          ) : (
+            <motion.span
+              key="copy"
+              initial={{ scale: 0.5, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.5, opacity: 0 }}
+              transition={spring}
+              style={{ display: "flex", alignItems: "center", gap: 5 }}
+            >
+              <IconCopy size={14} stroke={2} /> Copy
+            </motion.span>
+          )}
+        </AnimatePresence>
+      </motion.button>
+      {onRetry && (
+        <motion.button
+          whileTap={{ scale: pressScale }}
+          transition={spring}
+          onClick={() => {
+            selectHaptic();
+            onRetry();
+          }}
+          aria-label="Retry"
+          style={btn}
+        >
+          <IconRefresh size={14} stroke={2} /> Retry
+        </motion.button>
+      )}
     </motion.div>
   );
 }

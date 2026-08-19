@@ -3,8 +3,8 @@ import { Navigate, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "motion/react";
 import { IconArrowUp } from "@tabler/icons-react";
 import { Screen } from "@/components/Screen";
-import { ChatBubble, TypingBubble } from "@/components/ChatBubble";
-import { interviewTurn } from "@/api/watch";
+import { ChatBubble, MessageActions, TypingBubble } from "@/components/ChatBubble";
+import { interviewTurn, retryInterviewTurn } from "@/api/watch";
 import { pressScale, spring, springSoft } from "@/lib/motion";
 import { selectHaptic, tapHaptic } from "@/lib/haptics";
 import * as addFlow from "@/store/addFlow";
@@ -64,6 +64,40 @@ export default function AddInterview() {
     }
   }
 
+  /** Regenerate the agent's last reply: strip trailing agent bubbles back to
+   *  the trader's last answer, then re-run that exchange. */
+  async function retryLast() {
+    if (typing || !watchId) return;
+    let cut = thread.length;
+    while (cut > 0 && thread[cut - 1].role === "agent") cut--;
+    if (cut === 0 || cut === thread.length) return; // nothing to retry
+    const answer = thread[cut - 1].text;
+    const next = thread.slice(0, cut);
+    setThread(next);
+    addFlow.setTranscript(next);
+    setTyping(true);
+    try {
+      const step = await retryInterviewTurn(watchId, answer);
+      addFlow.setLastStep(step);
+      setTyping(false);
+      for (let i = 0; i < step.agentMessages.length; i++) {
+        if (i > 0) await sleep(450);
+        push({ role: "agent", text: step.agentMessages[i] });
+      }
+      setExpectsMood(!!step.expectsMood);
+      if (step.done) setTimeout(() => nav("/watch/new/confirm"), 700);
+    } catch {
+      setTyping(false);
+      push({ role: "agent", text: "That didn't go through. Mind saying it again?" });
+    }
+  }
+
+  const lastAgentIdx = (() => {
+    let cut = thread.length;
+    while (cut > 0 && thread[cut - 1].role === "agent") cut--;
+    return cut < thread.length && cut > 0 ? thread.length - 1 : -1;
+  })();
+
   return (
     <Screen back="/watch/new" tag={position.symbol} padBottom={false}>
       {/* Screen's header is fixed-height (10px top pad + 56px header); capping the
@@ -90,9 +124,23 @@ export default function AddInterview() {
           }}
         >
           {thread.map((t, i) => (
-            <ChatBubble key={i} role={t.role}>
-              {t.text}
-            </ChatBubble>
+            <div
+              key={i}
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: 6,
+                alignItems: t.role === "agent" ? "flex-start" : "flex-end",
+              }}
+            >
+              <ChatBubble role={t.role}>{t.text}</ChatBubble>
+              {t.role === "agent" && !typing && (
+                <MessageActions
+                  text={t.text}
+                  onRetry={i === lastAgentIdx ? retryLast : undefined}
+                />
+              )}
+            </div>
           ))}
           <AnimatePresence>{typing && <TypingBubble />}</AnimatePresence>
           <div ref={endRef} />

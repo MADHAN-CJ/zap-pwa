@@ -57,6 +57,16 @@ export async function interviewTurn(id: string, answer: string): Promise<Intervi
   return r.data.step;
 }
 
+/** Retry the last interview exchange: same answer, fresh agent reply.
+ *  MOCK-mode only concern for now; the real backend will own this. */
+export async function retryInterviewTurn(id: string, answer: string): Promise<InterviewStep> {
+  if (MOCK) {
+    agent.popLastExchange(id);
+    return agent.llmInterviewTurn(id, answer);
+  }
+  return interviewTurn(id, answer);
+}
+
 export async function getSynthesis(id: string): Promise<Synthesis> {
   if (MOCK) {
     const s = await agent.llmSynthesis(id);
