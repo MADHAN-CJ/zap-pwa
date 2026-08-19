@@ -19,7 +19,7 @@ import type {
 import * as fx from "./fixtures";
 import * as agent from "./agentLocal";
 
-const MOCK = import.meta.env.VITE_MOCK_API !== "0";
+export const MOCK = import.meta.env.VITE_MOCK_API !== "0";
 if (MOCK) {
   console.warn("[zap] Position Agent API in MOCK mode — zap-api endpoints pending (flagged).");
 }
@@ -146,6 +146,17 @@ export async function getDigest(date?: string): Promise<DigestEntry[]> {
   );
   if (!r.ok) throw new Error(r.error);
   return r.data.entries;
+}
+
+/** Market-wide instrument search for Add:Pick's search bar.
+ *  Backend (Madhan): GET /instruments/search?q= → { success, instruments }. */
+export async function searchInstruments(q: string): Promise<{ symbol: string; name: string }[]> {
+  if (MOCK) return fx.fxSearchInstruments(q);
+  const r = await apiRequest<{ success: boolean; instruments: { symbol: string; name: string }[] }>(
+    `/instruments/search?q=${encodeURIComponent(q)}`
+  );
+  if (!r.ok) throw new Error(r.error);
+  return r.data.instruments;
 }
 
 /** Open positions for Add:Pick — reuses the existing broker endpoint. */

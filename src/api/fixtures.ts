@@ -88,6 +88,32 @@ let feeds: Record<string, FeedEntry[]> = {
   ],
 };
 
+// A small instrument universe for the market search (stand-in for the
+// backend's GET /instruments/search).
+const INSTRUMENTS: { symbol: string; name: string }[] = [
+  { symbol: "NIFTY 24700 CE", name: "NIFTY 19 Aug 24700 Call" },
+  { symbol: "NIFTY 24500 CE", name: "NIFTY 19 Aug 24500 Call" },
+  { symbol: "NIFTY 24000 PE", name: "NIFTY 19 Aug 24000 Put" },
+  { symbol: "NIFTY 24200 PE", name: "NIFTY 19 Aug 24200 Put" },
+  { symbol: "BANKNIFTY 52000 CE", name: "BANKNIFTY 26 Aug 52000 Call" },
+  { symbol: "BANKNIFTY 51000 PE", name: "BANKNIFTY 26 Aug 51000 Put" },
+  { symbol: "RELIANCE", name: "Reliance Industries" },
+  { symbol: "HDFCBANK", name: "HDFC Bank" },
+  { symbol: "TCS", name: "Tata Consultancy Services" },
+  { symbol: "INFY", name: "Infosys" },
+  { symbol: "SILVERMIC", name: "Silver Micro 30 Sep (MCX)" },
+  { symbol: "GOLDPETAL", name: "Gold Petal 30 Sep (MCX)" },
+];
+
+export async function fxSearchInstruments(q: string) {
+  await delay(200);
+  const needle = q.trim().toLowerCase();
+  if (!needle) return [];
+  return INSTRUMENTS.filter(
+    (i) => i.symbol.toLowerCase().includes(needle) || i.name.toLowerCase().includes(needle)
+  ).slice(0, 8);
+}
+
 // ---------- interview script (stand-in for the backend agent) ----------
 
 interface Draft {

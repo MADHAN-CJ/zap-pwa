@@ -185,7 +185,22 @@ export default function Home() {
                       </span>
                       <StatusPill status={w.status} size="sm" />
                     </div>
-                    <span style={{ fontSize: 13, color: "var(--ink-2)" }}>{w.lastUpdateText}</span>
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "baseline",
+                        justifyContent: "space-between",
+                        gap: 12,
+                      }}
+                    >
+                      <span className="mono" style={{ fontSize: 13, color: "var(--ink)" }}>
+                        {w.side} {w.qty} · ₹{w.entryPrice.toLocaleString("en-IN")}
+                        {w.expiry ? ` · ${w.expiry}` : ""}
+                      </span>
+                      <span style={{ fontSize: 13, color: "var(--ink-3)", whiteSpace: "nowrap" }}>
+                        {w.lastUpdateText}
+                      </span>
+                    </div>
                   </motion.button>
                 ))}
           </div>

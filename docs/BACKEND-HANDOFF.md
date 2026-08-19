@@ -45,6 +45,8 @@ GET   /watches/:id                 → { success, watch, items }              //
 GET   /watches/:id/feed            → { success, feed[] }                    // timeline
 POST  /watches/:id/ask             { question, history? } → { success, turn: AskTurn }
 GET   /digest?date=                → { success, entries[] }
+GET   /instruments/search?q=       → { success, instruments: [{ symbol, name }] }
+                                   // market-wide search for Add:Pick's search bar
 ```
 
 `InterviewStep = { agentMessages: string[], done: boolean, expectsMood?: boolean }`.
@@ -76,9 +78,10 @@ Pick screen already consumes it.
    fill history or omitted entirely. The client renders it only when present;
    never send an approximation (PRD flags this as the highest-hallucination
    surface).
-3. **Login screen** — the redesign branch has the auth client (`src/api/auth.ts`
-   on `main`, token store in `src/store/auth.ts`) but no login UI yet; needed
-   before real-API mode works end to end.
+3. **Login** — the UI is built (`src/pages/Login.tsx`, email → OTP, routes
+   guarded when `VITE_MOCK_API=0`) against the existing `/auth/request-otp` /
+   `/auth/verify-otp` endpoints — verify those still behave as the client
+   expects (`{ success, token, user }`).
 4. **Ask conversation persistence** — the client currently retains each
    watch's Ask thread in localStorage (`src/pages/WatchAsk.tsx`, `zap-ask-*`
    keys) as a stopgap. The backend should own this: store turns per watch,

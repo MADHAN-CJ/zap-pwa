@@ -3,7 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "motion/react";
 import type { CSSProperties } from "react";
 import { Screen } from "@/components/Screen";
-import { createWatch, listOpenPositions } from "@/api/watch";
+import { IconSearch } from "@tabler/icons-react";
+import { createWatch, listOpenPositions, searchInstruments } from "@/api/watch";
 import { pressScale, spring, springSoft } from "@/lib/motion";
 import { tapHaptic } from "@/lib/haptics";
 import * as addFlow from "@/store/addFlow";
@@ -34,6 +35,23 @@ export default function AddPick() {
   const [mQty, setMQty] = useState("");
   const [mEntry, setMEntry] = useState("");
   const [mExpiry, setMExpiry] = useState("");
+  const [query, setQuery] = useState("");
+  const [results, setResults] = useState<{ symbol: string; name: string }[] | null>(null);
+
+  // Market-wide instrument search, debounced. Backend: GET /instruments/search.
+  useEffect(() => {
+    const q = query.trim();
+    if (!q) {
+      setResults(null);
+      return;
+    }
+    const timer = setTimeout(() => {
+      searchInstruments(q)
+        .then(setResults)
+        .catch(() => setResults([]));
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [query]);
 
   useEffect(() => {
     let live = true;
@@ -72,16 +90,88 @@ export default function AddPick() {
         <span style={{ color: "var(--ink-2)" }}>Start with one. Add the others later.</span>
       </p>
 
+      <div style={{ position: "relative", marginBottom: 16 }}>
+        <IconSearch
+          size={17}
+          stroke={2.2}
+          style={{
+            position: "absolute",
+            left: 14,
+            top: "50%",
+            transform: "translateY(-50%)",
+            color: "var(--ink-3)",
+            pointerEvents: "none",
+          }}
+        />
+        <input
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Search any position in the market…"
+          style={{ ...inputStyle, background: "var(--surface-2)", paddingLeft: 40 }}
+        />
+      </div>
+
       {error && (
         <p style={{ fontSize: 13, color: "var(--flipped)", paddingBottom: 10 }}>{error}</p>
       )}
 
-      {!positions && !error && (
+      {/* Search results: market instruments. Picking one prefills manual entry
+          (side/qty/entry are the trader's to state — it isn't a held position). */}
+      {results !== null && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 8 }}>
+          {results.length === 0 && (
+            <p style={{ fontSize: 13, color: "var(--ink-3)", padding: "4px 2px" }}>
+              Nothing matches. Try the symbol name.
+            </p>
+          )}
+          {results.map((r, i) => (
+            <motion.button
+              key={r.symbol}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ ...springSoft, delay: i * 0.03 }}
+              whileTap={{ scale: pressScale }}
+              onClick={() => {
+                tapHaptic();
+                setMSymbol(r.symbol);
+                setManualOpen(true);
+                setQuery("");
+              }}
+              style={{
+                display: "flex",
+                alignItems: "baseline",
+                justifyContent: "space-between",
+                gap: 10,
+                textAlign: "left",
+                padding: "12px 14px",
+                background: "var(--surface)",
+                borderRadius: "var(--radius-sm)",
+                boxShadow: "var(--shadow)",
+              }}
+            >
+              <span style={{ fontSize: 15, fontWeight: 600 }}>{r.symbol}</span>
+              <span
+                style={{
+                  fontSize: 13,
+                  color: "var(--ink-3)",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {r.name}
+              </span>
+            </motion.button>
+          ))}
+        </div>
+      )}
+
+      {!positions && !error && results === null && (
         <p style={{ fontSize: 13, color: "var(--ink-3)" }}>Loading positions…</p>
       )}
 
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-        {positions?.map((p, i) => {
+        {results === null && positions?.map((p, i) => {
           const pressed = busy === p.symbol;
           return (
             <motion.button
