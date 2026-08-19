@@ -77,6 +77,23 @@ market only when a human confirms in this app. Therefore:
 - **Smoothness is non-negotiable:** animate `transform` and `opacity` only,
   60fps on a real iPhone, respect `prefers-reduced-motion`.
 
+## Position Agent (current build — PRD in /Users/sj/Downloads/position-agent-prd.md)
+
+- Routes: `/watch` (home hub), `/watch/new` → interview → confirm, `/watch/:id`
+  (timeline / flipped), `/watch/:id/ask`, `/digest`. Strictly **read-only** —
+  no order placement anywhere in this feature, ever.
+- Shared vocabulary: ⚡ hard line (tick-by-tick) vs ◐ signal (30-min pass);
+  statuses `holding`/`bending`/`flipped` with their own tokens in `theme.css`
+  (NOT brand green — brand green is for primary actions only).
+- **Backend status:** zap-api has none of the §7 endpoints yet (source not
+  accessible from this machine — flagged to Sunny). `src/api/watch.ts` has the
+  real request shapes; `VITE_MOCK_API` defaults on, routing to
+  `src/api/fixtures.ts` (state) + `src/api/agentLocal.ts` (LLM logic).
+- **LLM:** interview/synthesis/ask run on Claude via a dev-only Vite middleware
+  (`/agent/chat` in `vite.config.ts`). `ANTHROPIC_API_KEY` lives in `.env.local`
+  (gitignored, server-side only — deliberately NOT `VITE_`-prefixed). The
+  client never holds the key. In production this logic must move into zap-api.
+
 ## Working style (important)
 
 Go **page by page**. Sunny names a screen → propose/show just that one → they
