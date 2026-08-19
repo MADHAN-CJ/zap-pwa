@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "motion/react";
-import { useState, type CSSProperties, type ReactNode } from "react";
+import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
 import { IconCopy, IconCheck, IconRefresh } from "@tabler/icons-react";
 import { ThinkingOrb } from "thinking-orbs";
 import { spring, springSoft, pressScale } from "@/lib/motion";
@@ -126,32 +126,57 @@ export function MessageActions({ text, onRetry }: { text: string; onRetry?: () =
   );
 }
 
-/** Thinking indicator: a thought-orb in the agent's bubble chrome.
- *  state maps to what the agent is actually doing (thinking-orbs verbs). */
+/** AI-primitive thinking indicator: bare orb + shimmer label + elapsed time.
+ *  Deliberately NO bubble chrome — thinking is a process, not a message. */
 export function TypingBubble({
   state = "working",
+  label = "Thinking",
 }: {
   state?: "working" | "listening" | "solving" | "weaving" | "composing";
+  /** Contextual status line(s). An array cycles every ~2.4s ("Reading your
+   *  answer" → "Working out what to ask next") so long waits stay honest. */
+  label?: string | string[];
 }) {
+  const labels = Array.isArray(label) ? label : [label];
+  const [elapsed, setElapsed] = useState(0);
+  useEffect(() => {
+    const started = performance.now();
+    const t = setInterval(() => setElapsed((performance.now() - started) / 1000), 100);
+    return () => clearInterval(t);
+  }, []);
+  const current = labels[Math.min(Math.floor(elapsed / 2.4), labels.length - 1)];
+
   return (
     <motion.div
-      initial={{ opacity: 0, y: 14, scale: 0.96 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.9 }}
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -6 }}
       transition={springSoft}
       style={{
         alignSelf: "flex-start",
-        padding: "10px 14px",
-        borderRadius: 18,
-        borderBottomLeftRadius: 6,
-        background: "var(--surface)",
-        boxShadow: "var(--shadow)",
         display: "flex",
         alignItems: "center",
-        transformOrigin: "bottom left",
+        gap: 9,
+        padding: "6px 4px",
       }}
     >
       <ThinkingOrb state={state} size={20} />
+      <AnimatePresence mode="popLayout" initial={false}>
+        <motion.span
+          key={current}
+          className="shimmer"
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -8 }}
+          transition={springSoft}
+          style={{ fontSize: 14, fontWeight: 500 }}
+        >
+          {current}
+        </motion.span>
+      </AnimatePresence>
+      <span className="mono" style={{ fontSize: 12, color: "var(--ink-3)" }}>
+        {elapsed.toFixed(1)}s
+      </span>
     </motion.div>
   );
 }

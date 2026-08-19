@@ -152,6 +152,25 @@ button {
   font-variant-numeric: tabular-nums;
 }
 
+/* AI-primitive shimmer: gradient sweep clipped to the text. */
+.shimmer {
+  background: linear-gradient(90deg, var(--ink-3) 20%, var(--ink) 50%, var(--ink-3) 80%);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: shimmer-sweep 1.8s linear infinite;
+}
+
+@keyframes shimmer-sweep {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

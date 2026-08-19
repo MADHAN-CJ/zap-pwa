@@ -142,7 +142,12 @@ export default function AddInterview() {
               )}
             </div>
           ))}
-          <AnimatePresence>{typing && <TypingBubble state="listening" />}</AnimatePresence>
+          <AnimatePresence>{typing && (
+            <TypingBubble
+              state="listening"
+              label={["Reading your answer", `Thinking about ${position.symbol}`, "Working out what to ask next"]}
+            />
+          )}</AnimatePresence>
           <div ref={endRef} />
         </div>
 

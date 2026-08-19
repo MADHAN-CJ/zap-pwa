@@ -20,6 +20,7 @@ export default function WatchAsk() {
   const { id = "" } = useParams();
   const nav = useNavigate();
   const [status, setStatus] = useState<WatchStatus | null>(null);
+  const [symbol, setSymbol] = useState("");
   const [missing, setMissing] = useState(false);
   const [turns, setTurns] = useState<AskTurn[]>([SEED]);
   const [input, setInput] = useState("");
@@ -33,7 +34,10 @@ export default function WatchAsk() {
     getWatch(id).then((d) => {
       if (!live) return;
       if (!d) setMissing(true);
-      else setStatus(d.watch.status);
+      else {
+        setStatus(d.watch.status);
+        setSymbol(d.watch.symbol);
+      }
     });
     return () => {
       live = false;
@@ -164,7 +168,16 @@ export default function WatchAsk() {
             )}
           </div>
         ))}
-        <AnimatePresence>{typing && <TypingBubble state="solving" />}</AnimatePresence>
+        <AnimatePresence>{typing && (
+          <TypingBubble
+            state="solving"
+            label={[
+              "Weighing the trade-offs",
+              symbol ? `Checking your five on ${symbol}` : "Checking your five",
+              "Putting it plainly",
+            ]}
+          />
+        )}</AnimatePresence>
         {failed && (
           <button
             onClick={() => setFailed(false)}

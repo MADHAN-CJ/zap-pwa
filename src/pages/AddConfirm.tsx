@@ -118,13 +118,9 @@ export default function AddConfirm() {
           }}
         >
           <ThinkingOrb state="weaving" size={64} />
-          <motion.p
-            animate={{ opacity: [0.5, 1, 0.5] }}
-            transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
-            style={{ fontSize: 14, color: "var(--ink-2)", textAlign: "center" }}
-          >
+          <p className="shimmer" style={{ fontSize: 14, fontWeight: 500, textAlign: "center" }}>
             Turning that into five things it can watch…
-          </motion.p>
+          </p>
         </div>
       )}
 
