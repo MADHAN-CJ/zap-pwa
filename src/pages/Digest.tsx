@@ -52,54 +52,79 @@ export default function Digest() {
                     background: "var(--surface)",
                     borderRadius: "var(--radius)",
                     boxShadow: "var(--shadow)",
-                    padding: "18px 18px 16px",
+                    padding: "20px 20px 18px",
                     display: "flex",
                     flexDirection: "column",
-                    gap: 10,
                   }}
                 >
-                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                    <span
-                      style={{
-                        fontSize: 12,
-                        fontWeight: 600,
-                        color: "var(--ink-2)",
-                        background: "var(--surface-2)",
-                        padding: "3px 9px",
-                        borderRadius: "var(--radius-full)",
-                        whiteSpace: "nowrap",
-                      }}
-                    >
-                      {e.symbol}
-                    </span>
-                    <span style={{ fontSize: 15, fontWeight: 600, letterSpacing: -0.2 }}>
-                      {e.headline}
-                    </span>
-                  </div>
-                  <p style={{ fontSize: 15, lineHeight: 1.5, color: "var(--ink)" }}>
+                  {/* Overline: symbol, quiet and technical */}
+                  <span
+                    className="mono"
+                    style={{
+                      fontSize: 11.5,
+                      fontWeight: 600,
+                      letterSpacing: 1.2,
+                      textTransform: "uppercase",
+                      color: "var(--ink-3)",
+                    }}
+                  >
+                    {e.symbol}
+                  </span>
+                  {/* Headline: the scannable takeaway */}
+                  <h2
+                    style={{
+                      fontSize: 19,
+                      fontWeight: 700,
+                      letterSpacing: -0.4,
+                      lineHeight: 1.25,
+                      marginTop: 6,
+                      color: "var(--ink)",
+                    }}
+                  >
+                    {e.headline}
+                  </h2>
+                  {/* The evening read: serif, loose leading, editorial */}
+                  <p
+                    style={{
+                      fontFamily: "ui-serif, 'New York', Georgia, serif",
+                      fontSize: 16,
+                      lineHeight: 1.7,
+                      marginTop: 10,
+                      color: "var(--ink)",
+                    }}
+                  >
                     {e.paragraph}
                   </p>
                   {e.prompts.length > 0 && (
-                    <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 2 }}>
+                    <div
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 10,
+                        marginTop: 16,
+                        paddingTop: 14,
+                        borderTop: "1px solid var(--line)",
+                      }}
+                    >
                       <span
                         style={{
-                          fontSize: 12,
+                          fontSize: 11,
                           fontWeight: 600,
-                          letterSpacing: 0.3,
+                          letterSpacing: 1,
+                          textTransform: "uppercase",
                           color: "var(--ink-3)",
                         }}
                       >
-                        worth thinking about tonight
+                        Worth thinking about tonight
                       </span>
                       {e.prompts.map((p, j) => (
                         <div
                           key={j}
                           style={{
                             display: "flex",
-                            gap: 9,
-                            alignItems: "baseline",
+                            gap: 10,
                             fontSize: 14,
-                            lineHeight: 1.5,
+                            lineHeight: 1.55,
                             color: "var(--ink-2)",
                           }}
                         >
@@ -108,9 +133,9 @@ export default function Digest() {
                               width: 4,
                               height: 4,
                               borderRadius: 999,
-                              background: "var(--ink-3)",
+                              background: "var(--bending)",
                               flexShrink: 0,
-                              alignSelf: "center",
+                              marginTop: 8,
                             }}
                           />
                           <span style={{ flex: 1 }}>{p}</span>
@@ -120,20 +145,35 @@ export default function Digest() {
                   )}
                 </motion.article>
               ) : (
-                <motion.p
+                <motion.div
                   key={e.watchId}
                   initial={{ opacity: 0, y: 16 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ ...springSoft, delay: i * 0.08 }}
                   style={{
-                    fontSize: 14,
-                    lineHeight: 1.5,
-                    color: "var(--ink-2)",
-                    padding: "4px 4px",
+                    display: "flex",
+                    alignItems: "baseline",
+                    gap: 10,
+                    padding: "6px 4px",
                   }}
                 >
-                  {e.symbol} — {e.quietLine ?? "Quiet day. Nothing on your five moved."}
-                </motion.p>
+                  <span
+                    className="mono"
+                    style={{
+                      fontSize: 11.5,
+                      fontWeight: 600,
+                      letterSpacing: 1.2,
+                      textTransform: "uppercase",
+                      color: "var(--ink-3)",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {e.symbol}
+                  </span>
+                  <span style={{ fontSize: 14, lineHeight: 1.5, color: "var(--ink-3)" }}>
+                    {e.quietLine ?? "Quiet day. Nothing on your five moved."}
+                  </span>
+                </motion.div>
               )
             )}
           </div>
