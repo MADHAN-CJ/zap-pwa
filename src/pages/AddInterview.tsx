@@ -142,7 +142,7 @@ export default function AddInterview() {
               )}
             </div>
           ))}
-          <AnimatePresence>{typing && <TypingBubble />}</AnimatePresence>
+          <AnimatePresence>{typing && <TypingBubble state="listening" />}</AnimatePresence>
           <div ref={endRef} />
         </div>
 

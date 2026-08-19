@@ -3,7 +3,7 @@ import { Navigate, useNavigate } from "react-router-dom";
 import { motion } from "motion/react";
 import type { CSSProperties } from "react";
 import { Screen } from "@/components/Screen";
-import { TypingBubble } from "@/components/ChatBubble";
+import { ThinkingOrb } from "thinking-orbs";
 import { WatchItemRow } from "@/components/WatchItemRow";
 import { getSynthesis, patchWatchItems, startWatch } from "@/api/watch";
 import { pressScale, spring, springSoft } from "@/lib/motion";
@@ -108,12 +108,20 @@ export default function AddConfirm() {
   return (
     <Screen back="/watch/new/interview" tag="confirm">
       {loading && (
-        <div style={{ display: "flex", flexDirection: "column", gap: 12, paddingTop: 8 }}>
-          <TypingBubble />
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: 18,
+            paddingTop: 64,
+          }}
+        >
+          <ThinkingOrb state="weaving" size={64} />
           <motion.p
             animate={{ opacity: [0.5, 1, 0.5] }}
             transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
-            style={{ fontSize: 14, color: "var(--ink-2)" }}
+            style={{ fontSize: 14, color: "var(--ink-2)", textAlign: "center" }}
           >
             Turning that into five things it can watch…
           </motion.p>
@@ -133,8 +141,9 @@ export default function AddConfirm() {
               lineHeight: 1.5,
               color: "var(--ink-2)",
               fontStyle: "italic",
-              borderLeft: "3px solid var(--line)",
-              paddingLeft: 12,
+              background: "var(--surface-2)",
+              borderRadius: "var(--radius-sm)",
+              padding: "12px 14px",
               margin: "4px 0 18px",
             }}
           >

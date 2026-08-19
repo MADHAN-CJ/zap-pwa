@@ -142,17 +142,29 @@ export default function WatchAsk() {
                   lineHeight: 1.45,
                   color: "var(--ink-2)",
                   background: "var(--surface-2)",
-                  borderLeft: "3px solid var(--line)",
                   borderRadius: "var(--radius-sm)",
-                  padding: "8px 12px",
+                  padding: "10px 12px",
                 }}
               >
-                From your own record: {t.historyNote}
+                <span
+                  style={{
+                    display: "block",
+                    fontSize: 10.5,
+                    fontWeight: 600,
+                    letterSpacing: 0.8,
+                    textTransform: "uppercase",
+                    color: "var(--ink-3)",
+                    marginBottom: 4,
+                  }}
+                >
+                  From your own record
+                </span>
+                {t.historyNote}
               </motion.div>
             )}
           </div>
         ))}
-        <AnimatePresence>{typing && <TypingBubble />}</AnimatePresence>
+        <AnimatePresence>{typing && <TypingBubble state="solving" />}</AnimatePresence>
         {failed && (
           <button
             onClick={() => setFailed(false)}

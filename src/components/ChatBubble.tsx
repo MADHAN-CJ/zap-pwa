@@ -1,6 +1,7 @@
 import { motion, AnimatePresence } from "motion/react";
 import { useState, type CSSProperties, type ReactNode } from "react";
 import { IconCopy, IconCheck, IconRefresh } from "@tabler/icons-react";
+import { ThinkingOrb } from "thinking-orbs";
 import { spring, springSoft, pressScale } from "@/lib/motion";
 import { selectHaptic } from "@/lib/haptics";
 
@@ -125,8 +126,13 @@ export function MessageActions({ text, onRetry }: { text: string; onRetry?: () =
   );
 }
 
-/** Three-dot typing indicator, same bubble chrome as the agent. */
-export function TypingBubble() {
+/** Thinking indicator: a thought-orb in the agent's bubble chrome.
+ *  state maps to what the agent is actually doing (thinking-orbs verbs). */
+export function TypingBubble({
+  state = "working",
+}: {
+  state?: "working" | "listening" | "solving" | "weaving" | "composing";
+}) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 14, scale: 0.96 }}
@@ -135,24 +141,17 @@ export function TypingBubble() {
       transition={springSoft}
       style={{
         alignSelf: "flex-start",
-        padding: "14px 16px",
+        padding: "10px 14px",
         borderRadius: 18,
         borderBottomLeftRadius: 6,
         background: "var(--surface)",
         boxShadow: "var(--shadow)",
         display: "flex",
-        gap: 4,
+        alignItems: "center",
         transformOrigin: "bottom left",
       }}
     >
-      {[0, 1, 2].map((i) => (
-        <motion.span
-          key={i}
-          animate={{ y: [0, -4, 0], opacity: [0.4, 1, 0.4] }}
-          transition={{ duration: 0.9, repeat: Infinity, delay: i * 0.15, ease: "easeInOut" }}
-          style={{ width: 6, height: 6, borderRadius: 999, background: "var(--ink-3)" }}
-        />
-      ))}
+      <ThinkingOrb state={state} size={20} />
     </motion.div>
   );
 }

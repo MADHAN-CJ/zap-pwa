@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Navigate, useNavigate, useParams } from "react-router-dom";
 import { motion } from "motion/react";
+import { BorderBeam } from "border-beam";
 import { Screen } from "@/components/Screen";
 import { StatusPill } from "@/components/StatusPill";
 import { WatchItemRow } from "@/components/WatchItemRow";
@@ -91,30 +92,38 @@ export default function WatchDetail() {
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={springSoft}
-            style={{
-              background: "var(--surface)",
-              borderLeft: "3px solid var(--flipped)",
-              borderRadius: "var(--radius-sm)",
-              boxShadow: "var(--shadow)",
-              padding: "14px 16px",
-              marginBottom: 20,
-            }}
+            style={{ marginBottom: 20 }}
           >
+            <BorderBeam size="pulse-inner" colorVariant="sunset" theme="auto">
+              <div
+                style={{
+                  background: "var(--surface)",
+                  borderRadius: "var(--radius)",
+                  boxShadow: "var(--shadow)",
+                  padding: "16px 18px",
+                }}
+              >
             <div
               style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 7,
                 fontSize: 11,
                 fontWeight: 600,
-                letterSpacing: 0.6,
+                letterSpacing: 0.8,
                 textTransform: "uppercase",
-                color: "var(--ink-3)",
-                marginBottom: 6,
+                color: "var(--flipped)",
+                marginBottom: 8,
               }}
             >
+              <span style={{ width: 6, height: 6, borderRadius: 999, background: "var(--flipped)" }} />
               What changed
             </div>
             <p style={{ fontSize: 15.5, lineHeight: 1.5, color: "var(--ink)" }}>
               {watch.changeSummary}
             </p>
+              </div>
+            </BorderBeam>
           </motion.div>
         )}
 
