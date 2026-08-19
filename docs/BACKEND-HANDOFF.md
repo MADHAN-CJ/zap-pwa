@@ -79,7 +79,12 @@ Pick screen already consumes it.
 3. **Login screen** — the redesign branch has the auth client (`src/api/auth.ts`
    on `main`, token store in `src/store/auth.ts`) but no login UI yet; needed
    before real-API mode works end to end.
-4. **Open questions** (PRD §12) — decide with Sunny, notably: does Position
+4. **Ask conversation persistence** — the client currently retains each
+   watch's Ask thread in localStorage (`src/pages/WatchAsk.tsx`, `zap-ask-*`
+   keys) as a stopgap. The backend should own this: store turns per watch,
+   return the thread from `GET /watches/:id` or a dedicated endpoint, and the
+   client-side storage gets deleted.
+5. **Open questions** (PRD §12) — decide with Sunny, notably: does Position
    Agent absorb/extend the existing Analysis feature or stay a separate
    surface (frontend currently assumes separate, at `/watch`)?
 
