@@ -134,7 +134,9 @@ export default function AddInterview() {
               }}
             >
               <ChatBubble role={t.role}>{t.text}</ChatBubble>
-              {t.role === "agent" && !typing && (
+              {/* Actions only under the newest agent message — a row under
+                  every bubble reads as clutter (older text stays selectable). */}
+              {t.role === "agent" && !typing && i === thread.length - 1 && (
                 <MessageActions
                   text={t.text}
                   onRetry={i === lastAgentIdx ? retryLast : undefined}

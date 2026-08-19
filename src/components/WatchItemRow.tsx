@@ -1,10 +1,13 @@
 import { motion } from "motion/react";
+import { IconBolt, IconCircleHalf2 } from "@tabler/icons-react";
 import { springSoft } from "@/lib/motion";
 import type { WatchItem } from "@/types";
 
-/** ⚡ vs ◐ — the two mechanisms, visibly different, everywhere (PRD §3.4). */
+/** Hard line vs signal — the two mechanisms, visibly different, everywhere
+ *  (PRD §3.4). Tabler icons, not emoji. */
 export function KindTag({ kind }: { kind: WatchItem["kind"] }) {
   const hard = kind === "hard";
+  const Icon = hard ? IconBolt : IconCircleHalf2;
   return (
     <span
       title={hard ? "Hard line: checked tick-by-tick" : "Signal: checked on a 30-min pass"}
@@ -22,7 +25,8 @@ export function KindTag({ kind }: { kind: WatchItem["kind"] }) {
         flexShrink: 0,
       }}
     >
-      {hard ? "⚡ hard line" : "◐ signal"}
+      <Icon size={12} stroke={2.2} />
+      {hard ? "hard line" : "signal"}
     </span>
   );
 }

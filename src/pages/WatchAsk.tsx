@@ -132,11 +132,10 @@ export default function WatchAsk() {
             style={{ display: "flex", flexDirection: "column", gap: 6, alignItems: t.role === "agent" ? "flex-start" : "flex-end" }}
           >
             <ChatBubble role={t.role}>{t.text}</ChatBubble>
-            {t.role === "agent" && i > 0 && !typing && (
-              <MessageActions
-                text={t.text}
-                onRetry={i === turns.length - 1 ? retryLast : undefined}
-              />
+            {/* Actions only under the newest agent message (older text stays
+                selectable) — one action row per thread, not per bubble. */}
+            {t.role === "agent" && i > 0 && !typing && i === turns.length - 1 && (
+              <MessageActions text={t.text} onRetry={retryLast} />
             )}
             {/* Only ever rendered when the API returned it — never placeholder copy. */}
             {t.role === "agent" && t.historyNote && (

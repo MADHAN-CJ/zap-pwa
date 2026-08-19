@@ -77,7 +77,7 @@ export default function WatchDetail() {
   if (watch.status === "flipped") {
     const gone = items.filter((i) => i.state === "gone").length;
     return (
-      <Screen back="/watch" tag={`${gone} of ${items.length} flipped`} padBottom={false}>
+      <Screen back="/watch" padBottom={false}>
         <div
           style={{
             display: "flex",
@@ -95,14 +95,33 @@ export default function WatchDetail() {
             paddingBottom: 12,
           }}
         >
-        {watch.priceLine && (
+        {/* Hero: what am I looking at, and how bad is it — before any prose. */}
+        <div style={{ padding: "0 2px 18px" }}>
+          <h2 style={{ fontSize: 22, fontWeight: 700, letterSpacing: -0.4, lineHeight: 1.2 }}>
+            {watch.symbol}
+          </h2>
+          {watch.priceLine && (
+            <div className="mono" style={{ fontSize: 13, color: "var(--ink-2)", marginTop: 5 }}>
+              {watch.priceLine}
+            </div>
+          )}
           <div
-            className="mono"
-            style={{ fontSize: 13, color: "var(--ink-2)", padding: "0 2px 14px" }}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 7,
+              marginTop: 10,
+              fontSize: 13,
+              fontWeight: 600,
+              color: "var(--flipped)",
+            }}
           >
-            {watch.priceLine}
+            <span
+              style={{ width: 7, height: 7, borderRadius: 999, background: "var(--flipped)" }}
+            />
+            {gone} of {items.length} flipped
           </div>
-        )}
+        </div>
 
         {watch.changeSummary && (
           <motion.div

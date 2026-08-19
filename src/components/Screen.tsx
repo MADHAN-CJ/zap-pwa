@@ -79,12 +79,9 @@ export function Screen({
           {tag && (
             <span
               style={{
-                fontSize: 11,
+                fontSize: 13,
                 fontWeight: 600,
                 color: "var(--ink-2)",
-                background: "var(--surface-2)",
-                padding: "4px 10px",
-                borderRadius: "var(--radius-full)",
                 whiteSpace: "nowrap",
               }}
             >
