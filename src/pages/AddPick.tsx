@@ -111,12 +111,11 @@ export default function AddPick() {
               onClick={() => start({ symbol: r.symbol })}
               style={{
                 display: "flex",
-                alignItems: "baseline",
-                justifyContent: "space-between",
-                gap: 10,
+                flexDirection: "column",
+                gap: 3,
                 width: "100%",
                 textAlign: "left",
-                padding: "14px 16px",
+                padding: "13px 16px",
                 background: "var(--surface)",
                 borderRadius: "var(--radius-sm)",
                 boxShadow: "var(--shadow)",
